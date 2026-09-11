@@ -13,6 +13,7 @@ import { Admin } from './components/Admin';
 import { Cabinet } from './components/Cabinet';
 import { News } from './components/News';
 import { Events } from './components/Events';
+import { Live } from './components/Live';
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="cabinet" element={<Cabinet />} />
           <Route path="news" element={<News />} />
           <Route path="events" element={<Events />} />
+          <Route path="live" element={<Live />} />
           <Route path="*" element={
             <div className="max-w-7xl mx-auto px-4 py-20 text-center min-h-[60vh] flex flex-col justify-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">Under Construction</h1>

@@ -9,13 +9,11 @@ export function Layout() {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'About Us', path: '/about' },
+    { name: 'Live', path: '/live' },
     { name: 'Membership', path: '/membership' },
     { name: 'Cabinet', path: '/cabinet' },
     { name: 'News', path: '/news' },
     { name: 'Events', path: '/events' },
-    { name: 'Donate', path: '/donate' },
-    { name: 'Admin', path: '/admin' },
   ];
 
   return (
