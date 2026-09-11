@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { Admin } from './components/Admin';
 import { Activity, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Droplets, Globe2, HeartHandshake, Images, Landmark, Menu, Megaphone, ShieldCheck, Sparkles, Users, Vote, X } from 'lucide-react';
 import './index.css';
+
+import { MembershipPage } from './components/MembershipPage';
 
 type RecordItem = Record<string, any> & { id?: string };
 const sections = [
@@ -42,7 +44,7 @@ function text(item: RecordItem, ...keys: string[]) { for (const k of keys) if (i
 function App() { return <BrowserRouter><Routes><Route path="*" element={<Site />} /></Routes></BrowserRouter>; }
 function Site() {
   const [menuOpen, setMenuOpen] = useState(false);
-  return <div className="site-shell"><Header onMenu={() => setMenuOpen(!menuOpen)} menuOpen={menuOpen} /><Routes><Route path="/admin" element={<Admin />} /><Route path="/" element={<Home />} /><Route path="/membership" element={<FormPage type="membership" />} /><Route path="/blood-donation" element={<FormPage type="bloodDonation" />} /><Route path="/overseas-registration" element={<FormPage type="overseasRegistration" />} /><Route path="/:type" element={<CollectionPage />} /></Routes><Footer /></div>;
+  return <div className="site-shell"><Header onMenu={() => setMenuOpen(!menuOpen)} menuOpen={menuOpen} /><Routes><Route path="/admin" element={<Admin />} /><Route path="/" element={<Home />} /><Route path="/membership" element={<MembershipPage />} /><Route path="/blood-donation" element={<FormPage type="bloodDonation" />} /><Route path="/overseas-registration" element={<FormPage type="overseasRegistration" />} /><Route path="/:type" element={<CollectionPage />} /></Routes><Footer /></div>;
 }
 function Header({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) { return <header className="topbar"><div className="container nav-wrap"><Link to="/" className="brand"><span className="brand-mark">ZJ</span><span><b>Zwanan Jawkhela</b><small>Youth welfare & community</small></span></Link><button className="menu-btn" onClick={onMenu} aria-label="Toggle menu">{menuOpen ? <X /> : <Menu />}</button><nav className={menuOpen ? 'nav-links open' : 'nav-links'}><NavLink to="/" end>Home</NavLink><NavLink to="/cabinet">Leadership</NavLink><NavLink to="/announcements">Updates</NavLink><NavLink to="/admin" className="admin-link">Admin</NavLink><NavLink to="/membership" className="nav-cta">Join the community <ArrowRight size={16} /></NavLink></nav></div></header>; }
 function Footer() { return <footer><div className="container footer-grid"><div><Link to="/" className="brand footer-brand"><span className="brand-mark">ZJ</span><span><b>Zwanan Jawkhela</b><small>Serving with unity</small></span></Link><p className="footer-note">A community platform for connection, welfare, and positive action.</p></div><div><p className="footer-heading">Explore</p><Link to="/membership">Membership</Link><Link to="/blood-donation">Blood donation</Link><Link to="/campaigns">Campaigns</Link></div><div><p className="footer-heading">Stay connected</p><Link to="/overseas-registration">Overseas registration</Link><Link to="/elections">Elections & voting</Link><Link to="/announcements">Announcements</Link></div></div><div className="container footer-bottom">Preparing websites by <strong>SHAUKAT KHAN YOUSAF</strong><span>Pray request for his late father Yousaf Khan</span></div></footer>; }
@@ -56,5 +58,45 @@ function AdsBillboard({ ads }: { ads: RecordItem[] }) { const ad = ads[0] || { t
 function EmptyState({ message, compact = false }: { message: string; compact?: boolean }) { return <div className={compact ? 'empty compact' : 'empty'}><Activity size={24} /><p>{message}</p></div>; }
 function CollectionPage() { const { type = '' } = useParams(); const section = sections.find((s) => s.path.slice(1) === type) || sections[2]; const [items, setItems] = useState<RecordItem[]>([]); useEffect(() => { readCollection(section.key).then(setItems); }, [section.key]); return <main className="page"><div className="container page-head"><Link to="/" className="back-link"><ChevronLeft size={16} /> Back home</Link><div className="eyebrow">Zwanan Jawkhela · Community services</div><h1>{section.title}</h1><p>{section.description}</p></div><div className="container cards-list">{items.length ? items.map((item, i) => <div key={item.id || i}><DataCard item={item} section={section.title} /></div>) : <EmptyState message="This space is ready for community updates. Check back soon or contact the cabinet to contribute information." />}</div></main>; }
 function DataCard({ item, section }: { item: RecordItem; section: string }) { return <article className="data-card"><div className="data-card-top"><span className="soft-tag">{text(item, 'category', 'type', 'status') || section}</span><span className="date">{formatDate(item.date || item.createdAt || item.startDate)}</span></div><h2>{text(item, 'title', 'name', 'fullName') || 'Community record'}</h2><p>{text(item, 'description', 'content', 'message', 'summary', 'responsibilities') || 'More details will be shared here as this community service grows.'}</p><div className="data-meta">{text(item, 'location', 'hospital', 'currentCountry') && <span>{text(item, 'location', 'hospital', 'currentCountry')}</span>}{text(item, 'position', 'urgency', 'priority') && <span>{text(item, 'position', 'urgency', 'priority')}</span>}</div></article>; }
-function FormPage({ type }: { type: string }) { const title = type === 'membership' ? 'Become a member' : type === 'bloodDonation' ? 'Blood donation request' : 'Overseas Pakistanis registration'; const fields = type === 'membership' ? ['Full name', 'Father name', 'CNIC', 'Phone', 'Village / address', 'Blood group'] : type === 'bloodDonation' ? ['Patient name', 'Blood group', 'Hospital', 'Contact number', 'Urgency'] : ['Full name', 'Passport / CNIC', 'Current country', 'Current city', 'Phone', 'Home village']; return <main className="page"><div className="container form-layout"><div className="form-intro"><Link to="/" className="back-link"><ChevronLeft size={16} /> Back home</Link><div className="eyebrow">Secure community form</div><h1>{title}</h1><p>Share your details with the Zwanan Jawkhela team. Your information is sent to the appropriate Firestore collection for review.</p><div className="form-points"><span><CheckCircle2 size={18} /> Reviewed by the cabinet</span><span><ShieldCheck size={18} /> Your details stay private</span></div></div><form className="community-form" onSubmit={(e) => e.preventDefault()}><div className="form-grid">{fields.map((f) => <label key={f}>{f}<input required placeholder={`Enter ${f.toLowerCase()}`} /></label>)}</div><label>Additional message<textarea rows={4} placeholder="Tell us anything the team should know" /></label><button className="button primary" type="submit">Submit for review <ArrowRight size={18} /></button><small className="form-help">Demo-safe form: connect with the cabinet for confirmation after submission.</small></form></div></main>; }
+function FormPage({ type }: { type: string }) { 
+  const title = type === 'membership' ? 'Become a member' : type === 'bloodDonation' ? 'Blood donation request' : 'Overseas Pakistanis registration'; 
+  const fields = type === 'membership' ? ['Full name', 'Father name', 'CNIC', 'Phone', 'Village / address', 'Blood group'] : type === 'bloodDonation' ? ['Patient name', 'Blood group', 'Hospital', 'Contact number', 'Urgency'] : ['Full name', 'Passport / CNIC', 'Current country', 'Current city', 'Phone', 'Home village']; 
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await addDoc(collection(db, type), {
+        ...formData,
+        message,
+        status: type === 'bloodDonation' ? 'Active' : 'Pending',
+        createdAt: serverTimestamp()
+      });
+      setSuccess(true);
+      setFormData({});
+      setMessage('');
+    } catch(err) {
+      console.error(err);
+      alert('Error submitting form.');
+    }
+    setLoading(false);
+  };
+
+  return <main className="page"><div className="container form-layout"><div className="form-intro"><Link to="/" className="back-link"><ChevronLeft size={16} /> Back home</Link><div className="eyebrow">Secure community form</div><h1>{title}</h1><p>Share your details with the Zwanan Jawkhela team. Your information is sent to the appropriate Firestore collection for review.</p><div className="form-points"><span><CheckCircle2 size={18} /> Reviewed by the cabinet</span><span><ShieldCheck size={18} /> Your details stay private</span></div></div>
+  {success ? (
+    <div className="bg-green-50 p-8 rounded-2xl border border-green-100 text-center">
+      <CheckCircle2 size={48} className="text-green-600 mx-auto mb-4" />
+      <h2 className="text-xl font-bold text-gray-900 mb-2">Successfully Submitted</h2>
+      <p className="text-gray-600 mb-6">Your information has been sent to the administration.</p>
+      <button onClick={() => setSuccess(false)} className="button primary">Submit another</button>
+    </div>
+  ) : (
+  <form className="community-form" onSubmit={handleSubmit}><div className="form-grid">{fields.map((f) => <label key={f}>{f}<input required value={formData[f] || ''} onChange={(e) => setFormData({...formData, [f]: e.target.value})} placeholder={`Enter ${f.toLowerCase()}`} /></label>)}</div><label>Additional message<textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Tell us anything the team should know" /></label><button disabled={loading} className="button primary" type="submit">{loading ? 'Submitting...' : 'Submit for review'} <ArrowRight size={18} /></button></form>
+  )}
+  </div></main>; 
+}
 export default App;

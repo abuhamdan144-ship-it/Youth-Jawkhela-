@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -28,12 +28,15 @@ export function Admin() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
+  const [bloodRequests, setBloodRequests] = useState<any[]>([]);
   
   // Form states
   const [newCabinetForm, setNewCabinetForm] = useState({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
+  const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '' });
 
   useEffect(() => {
     getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
@@ -48,15 +51,34 @@ export function Admin() {
         fetchCabinet();
         fetchMeetings();
         fetchNewsAndEvents();
+        fetchAdsAndBlood();
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  const fetchAdsAndBlood = async () => {
+    try {
+      const bq = query(collection(db, 'bloodDonation'), orderBy('createdAt', 'desc'));
+      const bs = await getDocs(bq);
+      const bl: any[] = [];
+      bs.forEach(d => bl.push({id: d.id, ...d.data()}));
+      setBloodRequests(bl);
+
+      const aq = query(collection(db, 'paidAds'), orderBy('createdAt', 'desc'));
+      const as = await getDocs(aq);
+      const al: any[] = [];
+      as.forEach(d => al.push({id: d.id, ...d.data()}));
+      setAds(al);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   const fetchNewsAndEvents = async () => {
     try {
-      const nq = query(collection(db, 'news'), orderBy('date', 'desc'));
+      const nq = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
       const ns = await getDocs(nq);
       const nl: any[] = [];
       ns.forEach(d => nl.push({id: d.id, ...d.data()}));
@@ -75,13 +97,13 @@ export function Admin() {
   const fetchMembers = async () => {
     setFetching(true);
     try {
-      const qPending = query(collection(db, 'users'), where('membershipStatus', '==', 'pending'));
+      const qPending = query(collection(db, 'memberships'), where('status', '==', 'Pending'));
       const pendingSnapshot = await getDocs(qPending);
       const pendingList: any[] = [];
       pendingSnapshot.forEach((d) => pendingList.push({ id: d.id, ...d.data() }));
       setPendingMembers(pendingList);
 
-      const qActive = query(collection(db, 'users'), where('membershipStatus', '==', 'active'));
+      const qActive = query(collection(db, 'memberships'), where('status', '==', 'Approved'));
       const activeSnapshot = await getDocs(qActive);
       const activeList: any[] = [];
       activeSnapshot.forEach((d) => activeList.push({ id: d.id, ...d.data() }));
@@ -150,11 +172,11 @@ export function Admin() {
 
   const approveMember = async (id: string) => {
     try {
-      const memberRef = doc(db, 'users', id);
+      const memberRef = doc(db, 'memberships', id);
       await updateDoc(memberRef, {
-        membershipStatus: 'active',
-        membershipNumber: `ZJ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-        approvalDate: new Date().toISOString()
+        status: 'Approved',
+        cardNumber: `ZJ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        issueDate: serverTimestamp()
       });
       fetchMembers();
       alert("Member approved successfully!");
@@ -162,6 +184,69 @@ export function Admin() {
       console.error("Error approving member:", error);
       alert("Failed to approve member.");
     }
+  };
+
+  const deleteMember = async (id: string) => {
+    if(!confirm('Delete this member?')) return;
+    try {
+      await deleteDoc(doc(db, 'memberships', id));
+      fetchMembers();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const deleteCabinetMember = async (id: string) => {
+    if(!confirm('Delete cabinet member?')) return;
+    try {
+      await deleteDoc(doc(db, 'cabinet', id));
+      fetchCabinet();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleAddAd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'paidAds'), {
+        ...newAdForm,
+        createdAt: serverTimestamp()
+      });
+      setNewAdForm({ title: '', businessName: '', cta: '', description: '' });
+      fetchAdsAndBlood();
+      alert('Ad added!');
+    } catch (e) { console.error(e); }
+  };
+
+  const deleteAd = async (id: string) => {
+    if(!confirm('Delete ad?')) return;
+    try {
+      await deleteDoc(doc(db, 'paidAds', id));
+      fetchAdsAndBlood();
+    } catch(e) { console.error(e); }
+  };
+
+  const deleteNews = async (id: string) => {
+    if(!confirm('Delete announcement?')) return;
+    try {
+      await deleteDoc(doc(db, 'announcements', id));
+      fetchNewsAndEvents();
+    } catch(e) { console.error(e); }
+  };
+
+  const deleteEvent = async (id: string) => {
+    if(!confirm('Delete event?')) return;
+    try {
+      await deleteDoc(doc(db, 'events', id));
+      fetchNewsAndEvents();
+    } catch(e) { console.error(e); }
+  };
+
+  const deleteBloodRequest = async (id: string) => {
+    if(!confirm('Delete blood request?')) return;
+    try {
+      await deleteDoc(doc(db, 'bloodDonation', id));
+      fetchAdsAndBlood();
+    } catch(e) { console.error(e); }
   };
 
   const generatePDFCard = async (member: any) => {
@@ -195,16 +280,16 @@ export function Admin() {
         <div style="flex: 1;">
           <div style="margin-bottom: 12px;">
             <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Member Name</p>
-            <p style="margin: 0; font-size: 24px; font-weight: bold;">${member.name}</p>
+            <p style="margin: 0; font-size: 24px; font-weight: bold;">${member.fullName || member.name}</p>
           </div>
           <div style="display: flex; gap: 40px; margin-bottom: 12px;">
             <div>
               <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Membership No.</p>
-              <p style="margin: 0; font-size: 16px; font-family: monospace;">${member.membershipNumber || 'Pending'}</p>
+              <p style="margin: 0; font-size: 16px; font-family: monospace;">${member.cardNumber || member.membershipNumber || 'Pending'}</p>
             </div>
             <div>
               <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Blood Group</p>
-              <p style="margin: 0; font-size: 16px; color: #ff4757; font-weight: bold;">${member.bloodType}</p>
+              <p style="margin: 0; font-size: 16px; color: #ff4757; font-weight: bold;">${member.bloodGroup || member.bloodType}</p>
             </div>
           </div>
           <div>
@@ -232,7 +317,8 @@ export function Admin() {
       });
       
       pdf.addImage(imgData, 'PNG', 0, 0, 600, 350);
-      pdf.save(`ZJ_Card_${member.name.replace(/\s+/g, '_')}.pdf`);
+      const fileName = (member.fullName || member.name).replace(/\s+/g, '_');
+      pdf.save(`ZJ_Card_${fileName}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF card.");
@@ -256,8 +342,8 @@ export function Admin() {
       
       await addDoc(collection(db, 'cabinet'), {
         userId: userObj.id,
-        name: userObj.name,
-        profileImage: userObj.profileImage || '',
+        name: userObj.fullName || userObj.name || '',
+        profileImage: userObj.profileImage || userObj.profileImageUrl || '',
         position: newCabinetForm.position,
         tenure: { startDate: newCabinetForm.startDate, endDate: newCabinetForm.endDate },
         responsibilities: newCabinetForm.responsibilities,
@@ -422,6 +508,12 @@ export function Admin() {
           >
             <Newspaper size={20} /> News & Events
           </button>
+          <button 
+            onClick={() => selectTab('ads')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'ads' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+          >
+            <CheckCircle size={20} /> Paid Ads
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-700">
           <button 
@@ -487,24 +579,29 @@ export function Admin() {
                         {pendingMembers.map((member) => (
                           <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                             <td className="p-4">
-                              <div className="font-medium text-gray-900">{member.name}</div>
-                              <div className="text-sm text-gray-500">{member.email}</div>
+                              <div className="font-medium text-gray-900">{member.fullName || member.name}</div>
                             </td>
                             <td className="p-4">
                               <div className="text-sm font-mono text-gray-700">{member.cnic}</div>
                               <div className="text-sm text-gray-500">{member.phone}</div>
                             </td>
                             <td className="p-4">
-                              <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full ${member.membershipTier === 'overseas' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {member.membershipTier}
+                              <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                                {member.bloodGroup || member.membershipTier}
                               </span>
                             </td>
-                            <td className="p-4">
+                            <td className="p-4 flex gap-2">
                               <button 
                                 onClick={() => approveMember(member.id)}
                                 className="flex items-center gap-1.5 bg-primary hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                               >
                                 <CheckCircle size={16} /> Approve
+                              </button>
+                              <button 
+                                onClick={() => deleteMember(member.id)}
+                                className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                Delete
                               </button>
                             </td>
                           </tr>
@@ -539,12 +636,11 @@ export function Admin() {
                         {activeMembers.map((member) => (
                           <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                             <td className="p-4">
-                              <div className="font-medium text-gray-900">{member.name}</div>
-                              <div className="text-sm font-mono text-secondary font-semibold">{member.membershipNumber}</div>
+                              <div className="font-medium text-gray-900">{member.fullName || member.name}</div>
+                              <div className="text-sm font-mono text-secondary font-semibold">{member.cardNumber || member.membershipNumber}</div>
                             </td>
                             <td className="p-4">
                               <div className="text-sm text-gray-700">{member.phone}</div>
-                              <div className="text-sm text-gray-500">{member.email}</div>
                             </td>
                             <td className="p-4">
                               <div className="flex gap-2">
@@ -555,10 +651,16 @@ export function Admin() {
                                   <Printer size={16} /> Card
                                 </button>
                                 <button 
-                                  onClick={() => initiateWhatsApp(member.phone, member.name)}
+                                  onClick={() => initiateWhatsApp(member.phone, member.fullName || member.name)}
                                   className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                                 >
                                   WhatsApp
+                                </button>
+                                <button 
+                                  onClick={() => deleteMember(member.id)}
+                                  className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                                >
+                                  Delete
                                 </button>
                               </div>
                             </td>
@@ -627,14 +729,14 @@ export function Admin() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {activeMembers.filter(m => bloodFilter ? m.bloodType === bloodFilter : true).map((member) => (
+                      {activeMembers.filter(m => bloodFilter ? (m.bloodGroup === bloodFilter || m.bloodType === bloodFilter) : true).map((member) => (
                         <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="p-4 font-medium text-gray-900">{member.name}</td>
-                          <td className="p-4"><span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded">{member.bloodType}</span></td>
+                          <td className="p-4 font-medium text-gray-900">{member.fullName || member.name}</td>
+                          <td className="p-4"><span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded">{member.bloodGroup || member.bloodType}</span></td>
                           <td className="p-4">
                             <div className="text-sm text-gray-900">{member.phone}</div>
                           </td>
-                          <td className="p-4 text-sm text-gray-600 truncate max-w-xs">{member.address}</td>
+                          <td className="p-4 text-sm text-gray-600 truncate max-w-xs">{member.village || member.address}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -653,7 +755,7 @@ export function Admin() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Select Active Member</label>
                     <select required value={newCabinetForm.userId} onChange={(e) => setNewCabinetForm({...newCabinetForm, userId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
                       <option value="">-- Select Member --</option>
-                      {activeMembers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.membershipNumber})</option>)}
+                      {activeMembers.map(m => <option key={m.id} value={m.id}>{m.fullName || m.name} ({m.cardNumber || m.membershipNumber || 'No ID'})</option>)}
                     </select>
                   </div>
                   <div>
@@ -780,12 +882,28 @@ export function Admin() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                       <textarea required value={newNewsForm.content} onChange={(e) => setNewNewsForm({...newNewsForm, content: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 min-h-[100px]"></textarea>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end mt-4">
                       <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Publish News</button>
                     </div>
                   </form>
                 </div>
-
+                {/* News List */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-h-96 overflow-y-auto">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Manage News</h3>
+                  <div className="space-y-3">
+                    {news.map(n => (
+                      <div key={n.id} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                        <div>
+                          <p className="font-bold text-sm">{n.title}</p>
+                          <p className="text-xs text-gray-500">{n.category}</p>
+                        </div>
+                        <button onClick={() => deleteNews(n.id)} className="text-red-500 text-xs font-bold">Delete</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                 {/* Event Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Schedule Event</h3>
@@ -812,10 +930,66 @@ export function Admin() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                       <textarea required value={newEventForm.description} onChange={(e) => setNewEventForm({...newEventForm, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" rows={2}></textarea>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end mt-4">
                       <button type="submit" className="bg-secondary hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Schedule Event</button>
                     </div>
                   </form>
+                </div>
+                {/* Events List */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-h-96 overflow-y-auto">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Manage Events</h3>
+                  <div className="space-y-3">
+                    {events.map(ev => (
+                      <div key={ev.id} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg">
+                        <div>
+                          <p className="font-bold text-sm">{ev.title}</p>
+                          <p className="text-xs text-gray-500">{ev.date} {ev.time}</p>
+                        </div>
+                        <button onClick={() => deleteEvent(ev.id)} className="text-red-500 text-xs font-bold">Delete</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ads' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Create Paid Ad</h3>
+                <form onSubmit={handleAddAd} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad Title</label>
+                    <input required value={newAdForm.title} onChange={e => setNewAdForm({...newAdForm, title: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                    <input required value={newAdForm.businessName} onChange={e => setNewAdForm({...newAdForm, businessName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CTA Text</label>
+                    <input required value={newAdForm.cta} onChange={e => setNewAdForm({...newAdForm, cta: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea required value={newAdForm.description} onChange={e => setNewAdForm({...newAdForm, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+                  </div>
+                  <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg font-bold">Publish Ad</button>
+                </form>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-h-[600px] overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Active Ads</h3>
+                <div className="space-y-4">
+                  {ads.map(ad => (
+                    <div key={ad.id} className="p-4 border border-gray-100 rounded-xl flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold">{ad.title}</h4>
+                        <p className="text-sm text-gray-500">{ad.businessName}</p>
+                      </div>
+                      <button onClick={() => deleteAd(ad.id)} className="text-red-500 text-sm font-bold">Delete</button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
