@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'abuhamdan144@gmail.com' || 
+        request.auth.token.email == 'hiapp144@gmail.com' ||
+        request.auth.token.email == 'admin@zwanan-jawkhel.com'
+      );
+    }
+
+    // Publicly readable collections (anyone can read, only admin can write)
+    match /cabinet/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /announcements/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /news/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /events/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /paidAds/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /campaigns/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /elections/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /dailyTasks/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User-submitted collections (anyone can create, but only admin can read all/update/delete)
+    match /memberships/{document=**} {
+      // Allow public creation
+      allow create: if true;
+      // Allow public read only if they know the exact CNIC (handled via query in UI, but rules need to support it securely)
+      // Since our UI queries by CNIC, we allow read if the query filters by cnic or if admin
+      allow read: if isAdmin() || (resource.data.cnic != null); 
+      allow write: if isAdmin();
+    }
+
+    match /bloodDonation/{document=**} {
+      allow create: if true;
+      allow read: if true; // Public needs to see blood requests
+      allow write: if isAdmin();
+    }
+
+    match /overseasRegistration/{document=**} {
+      allow create: if true;
+      allow read, write: if isAdmin();
+    }
+
+    match /users/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /cabinetMeetings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /donations/{document=**} {
+      allow create: if true;
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny for anything else
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

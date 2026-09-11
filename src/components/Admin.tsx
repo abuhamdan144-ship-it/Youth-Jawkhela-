@@ -30,13 +30,14 @@ export function Admin() {
   const [events, setEvents] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
   const [bloodRequests, setBloodRequests] = useState<any[]>([]);
+  const [overseas, setOverseas] = useState<any[]>([]);
   
   // Form states
   const [newCabinetForm, setNewCabinetForm] = useState({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
-  const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '' });
+  const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '' });
 
   useEffect(() => {
     getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
@@ -71,6 +72,12 @@ export function Admin() {
       const al: any[] = [];
       as.forEach(d => al.push({id: d.id, ...d.data()}));
       setAds(al);
+
+      const oq = query(collection(db, 'overseasRegistration'), orderBy('createdAt', 'desc'));
+      const os = await getDocs(oq);
+      const ol: any[] = [];
+      os.forEach(d => ol.push({id: d.id, ...d.data()}));
+      setOverseas(ol);
     } catch(err) {
       console.error(err);
     }
@@ -186,6 +193,21 @@ export function Admin() {
     }
   };
 
+  const rejectMember = async (id: string) => {
+    if(!confirm('Reject this member?')) return;
+    try {
+      const memberRef = doc(db, 'memberships', id);
+      await updateDoc(memberRef, {
+        status: 'Rejected'
+      });
+      fetchMembers();
+      alert("Member rejected.");
+    } catch (error) {
+      console.error(error);
+      alert("Error rejecting member.");
+    }
+  };
+
   const deleteMember = async (id: string) => {
     if(!confirm('Delete this member?')) return;
     try {
@@ -211,7 +233,7 @@ export function Admin() {
         ...newAdForm,
         createdAt: serverTimestamp()
       });
-      setNewAdForm({ title: '', businessName: '', cta: '', description: '' });
+      setNewAdForm({ title: '', businessName: '', cta: '', description: '', imageUrl: '' });
       fetchAdsAndBlood();
       alert('Ad added!');
     } catch (e) { console.error(e); }
@@ -238,6 +260,14 @@ export function Admin() {
     try {
       await deleteDoc(doc(db, 'events', id));
       fetchNewsAndEvents();
+    } catch(e) { console.error(e); }
+  };
+
+  const deleteOverseas = async (id: string) => {
+    if(!confirm('Delete overseas registration?')) return;
+    try {
+      await deleteDoc(doc(db, 'overseasRegistration', id));
+      fetchAdsAndBlood();
     } catch(e) { console.error(e); }
   };
 
@@ -491,6 +521,12 @@ export function Admin() {
             <Droplet size={20} /> Blood Database
           </button>
           <button 
+            onClick={() => selectTab('overseas')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'overseas' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+          >
+            <Globe2 size={20} /> Overseas
+          </button>
+          <button 
             onClick={() => selectTab('cabinet')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'cabinet' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
@@ -506,7 +542,7 @@ export function Admin() {
             onClick={() => selectTab('news')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'news' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
-            <Newspaper size={20} /> News & Events
+            <Newspaper size={20} /> Announcements
           </button>
           <button 
             onClick={() => selectTab('ads')}
@@ -545,6 +581,10 @@ export function Admin() {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
                 <span className="text-sm font-medium text-gray-500 mb-2">Recent Donations</span>
                 <span className="text-4xl font-bold text-gray-900">--</span>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <span className="text-sm font-medium text-gray-500 mb-2">Overseas Pakistanis</span>
+                <span className="text-4xl font-bold text-gray-900">{overseas.length}</span>
               </div>
             </div>
           )}
@@ -596,6 +636,12 @@ export function Admin() {
                                 className="flex items-center gap-1.5 bg-primary hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                               >
                                 <CheckCircle size={16} /> Approve
+                              </button>
+                              <button 
+                                onClick={() => rejectMember(member.id)}
+                                className="flex items-center gap-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                Reject
                               </button>
                               <button 
                                 onClick={() => deleteMember(member.id)}
@@ -743,6 +789,93 @@ export function Admin() {
                   </table>
                 </div>
               </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="font-semibold text-gray-800">Emergency Requests</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
+                        <th className="p-4 font-medium">Patient / Requester</th>
+                        <th className="p-4 font-medium">Blood Group</th>
+                        <th className="p-4 font-medium">Hospital & Contact</th>
+                        <th className="p-4 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {bloodRequests.map((req) => (
+                        <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-4 font-medium text-gray-900">{req.patientName || req.name}</td>
+                          <td className="p-4"><span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded">{req.bloodGroup}</span></td>
+                          <td className="p-4">
+                            <div className="text-sm text-gray-900">{req.hospital}</div>
+                            <div className="text-sm text-gray-500">{req.contact}</div>
+                          </td>
+                          <td className="p-4">
+                              <button 
+                                onClick={() => deleteBloodRequest(req.id)}
+                                className="text-red-500 hover:text-red-700 text-sm font-bold"
+                              >
+                                Delete Request
+                              </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {activeTab === 'overseas' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-800">Overseas Registrations</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
+                        <th className="p-4 font-medium">Name & CNIC/Passport</th>
+                        <th className="p-4 font-medium">Country & City</th>
+                        <th className="p-4 font-medium">Village & Contact</th>
+                        <th className="p-4 font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {overseas.map((reg) => (
+                        <tr key={reg.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <div className="font-medium text-gray-900">{reg['Full name'] || reg.name}</div>
+                            <div className="text-sm font-mono text-gray-500">{reg['Passport / CNIC']}</div>
+                          </td>
+                          <td className="p-4">
+                            <div className="text-gray-900">{reg['Current country']}</div>
+                            <div className="text-sm text-gray-500">{reg['Current city']}</div>
+                          </td>
+                          <td className="p-4">
+                            <div className="text-gray-900">{reg['Home village']}</div>
+                            <div className="text-sm text-gray-500">{reg['Phone']}</div>
+                          </td>
+                          <td className="p-4">
+                            <button 
+                              onClick={() => deleteOverseas(reg.id)}
+                              className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
@@ -857,7 +990,7 @@ export function Admin() {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* News Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Publish News / Announcement</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Publish Announcement (Shows in Top Bar)</h3>
                   <form onSubmit={handleAddNews} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -974,6 +1107,23 @@ export function Admin() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea required value={newAdForm.description} onChange={e => setNewAdForm({...newAdForm, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Background Image</label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setNewAdForm({...newAdForm, imageUrl: reader.result as string});
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2" 
+                    />
+                    {newAdForm.imageUrl && <img src={newAdForm.imageUrl} className="mt-2 h-20 rounded object-cover" alt="Ad preview" />}
                   </div>
                   <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg font-bold">Publish Ad</button>
                 </form>
