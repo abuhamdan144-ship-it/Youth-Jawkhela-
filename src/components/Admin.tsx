@@ -3,9 +3,10 @@ import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInW
 import { auth, googleProvider, db, storage } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2 } from 'lucide-react';
+import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { MetalButton } from './ui/metal-button';
 
 // Simplified for MVP. We check if the logged in email is the admin.
 const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'hiapp144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
@@ -727,7 +728,8 @@ export function Admin() {
         
         <main className="flex-1 min-w-0 overflow-auto p-4 sm:p-8">
           {activeTab === 'dashboard' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
                 <span className="text-sm font-medium text-gray-500 mb-2">Pending Approvals</span>
                 <span className="text-4xl font-bold text-gray-900">{pendingMembers.length}</span>
@@ -744,6 +746,45 @@ export function Admin() {
                 <span className="text-sm font-medium text-gray-500 mb-2">Overseas Pakistanis</span>
                 <span className="text-4xl font-bold text-gray-900">{overseas.length}</span>
               </div>
+              </div>
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Quick actions</span>
+                    <h2 className="mt-1 text-2xl font-bold text-gray-900">Manage the community</h2>
+                  </div>
+                  <p className="max-w-md text-sm text-gray-500">Jump directly to the areas you update most often.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <MetalButton
+                    preset="chromatic"
+                    size="md"
+                    onClick={() => selectTab('cabinet')}
+                    className="bg-emerald-50 px-5"
+                  >
+                    <Sparkles size={16} />
+                    Add cabinet member
+                  </MetalButton>
+                  <MetalButton
+                    preset="silver"
+                    size="md"
+                    onClick={() => selectTab('meetings')}
+                    className="bg-slate-100 px-5"
+                  >
+                    View meetings
+                    <ArrowUpRight size={16} />
+                  </MetalButton>
+                  <MetalButton
+                    preset="gold"
+                    size="md"
+                    onClick={() => selectTab('ads')}
+                    className="bg-amber-50 px-5"
+                  >
+                    Publish paid ad
+                    <ArrowUpRight size={16} />
+                  </MetalButton>
+                </div>
+              </section>
             </div>
           )}
 
