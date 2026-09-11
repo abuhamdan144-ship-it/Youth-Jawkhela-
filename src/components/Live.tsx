@@ -78,7 +78,7 @@ export function Live() {
     e.preventDefault();
     setSubmittingBlood(true);
     try {
-      await addDoc(collection(db, 'bloodRequests'), {
+      await addDoc(collection(db, 'bloodDonation'), {
         ...bloodForm,
         status: 'Active',
         createdAt: serverTimestamp()
