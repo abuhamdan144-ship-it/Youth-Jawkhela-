@@ -3,19 +3,15 @@ import re
 with open('src/App.tsx', 'r') as f:
     code = f.read()
 
-old_fallback = """const fallbackCabinet = [
-  { name: 'President', position: 'Community President', responsibilities: 'Guiding the organization with integrity and service.', profileImage: '' },
-  { name: 'General Secretary', position: 'General Secretary', responsibilities: 'Coordinating programs, records, and community communication.', profileImage: '' },
-  { name: 'Welfare Coordinator', position: 'Welfare Coordinator', responsibilities: 'Connecting families with welfare and emergency support.', profileImage: '' },
-  { name: 'Youth Coordinator', position: 'Youth Coordinator', responsibilities: 'Building opportunities for young people to lead and serve.', profileImage: '' },
-];"""
+old_state = "readCollection('overseasRegistration').then((x) => setOverseas(x.length ? x : []));"
 
-new_fallback = """const fallbackCabinet = [
-  { name: 'Community President', position: 'President', responsibilities: 'Guiding the organization with integrity and service.', profileImage: '' },
-  { name: 'General Secretary', position: 'General Secretary', responsibilities: 'Coordinating programs, records, and community communication.', profileImage: '' },
-  { name: 'Finance Secretary', position: 'Finance Secretary', responsibilities: 'Managing financial resources transparently.', profileImage: '' },
-  { name: 'Social Media / IT Secretary', position: 'Social Media / IT Secretary', responsibilities: 'Managing online presence and communication.', profileImage: '' },
-];"""
+new_state = "readCollection('overseasRegistration').then((x) => setOverseas(x.length ? x : fallbackOverseas));"
+
+code = code.replace(old_state, new_state)
+
+old_fallback = "const fallbackCabinet = ["
+
+new_fallback = "const fallbackOverseas = [\n  { fullName: 'Global Supporter', currentCountry: 'United Kingdom' },\n  { fullName: 'Community Member', currentCountry: 'UAE' },\n  { fullName: 'Jawkhela Youth', currentCountry: 'Saudi Arabia' },\n];\nconst fallbackCabinet = ["
 
 code = code.replace(old_fallback, new_fallback)
 
