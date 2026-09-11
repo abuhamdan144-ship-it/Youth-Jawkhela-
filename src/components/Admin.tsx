@@ -34,13 +34,20 @@ export function Admin() {
   const [overseas, setOverseas] = useState<any[]>([]);
   
   // Form states
-  const [newCabinetForm, setNewCabinetForm] = useState({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+  const [newCabinetForm, setNewCabinetForm] = useState({ name: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
   const [cabinetImage, setCabinetImage] = useState<File | null>(null);
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
   const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
   const [adImage, setAdImage] = useState<File | null>(null);
+
+  const [newMemberForm, setNewMemberForm] = useState({ fullName: '', phone: '', cnic: '', bloodGroup: 'O+', village: 'Jawkhela' });
+  const [newDonationForm, setNewDonationForm] = useState({ donorName: '', amount: '', date: '', purpose: '' });
+  const [newBloodForm, setNewBloodForm] = useState({ patientName: '', bloodGroup: 'A+', hospital: '', contactNumber: '', urgency: 'High' });
+  const [newOverseasForm, setNewOverseasForm] = useState({ fullName: '', currentCountry: '', currentCity: '', phone: '', homeVillage: '' });
+  const [donations, setDonations] = useState<any[]>([]);
+
 
   useEffect(() => {
     getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
@@ -56,6 +63,7 @@ export function Admin() {
         fetchMeetings();
         fetchNewsAndEvents();
         fetchAdsAndBlood();
+        fetchDonations();
       }
     });
 
@@ -240,6 +248,76 @@ export function Admin() {
     try { await updateDoc(doc(db, 'memberships', member.id), { fullName, name: fullName, phone }); fetchMembers(); } catch (e) { console.error(e); alert('Failed to update member.'); }
   };
 
+  
+  const fetchDonations = async () => {
+    try {
+      const q = query(collection(db, 'donations'), orderBy('createdAt', 'desc'));
+      const snap = await getDocs(q);
+      const list: any[] = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setDonations(list);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'memberships'), {
+        ...newMemberForm,
+        name: newMemberForm.fullName,
+        status: 'Active',
+        membershipTier: 'standard',
+        createdAt: serverTimestamp()
+      });
+      setNewMemberForm({ fullName: '', phone: '', cnic: '', bloodGroup: 'O+', village: 'Jawkhela' });
+      fetchMembers();
+      alert('Member added manually.');
+    } catch(e) { console.error(e); }
+  };
+
+  const handleAddDonation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'donations'), {
+        ...newDonationForm,
+        createdAt: serverTimestamp()
+      });
+      setNewDonationForm({ donorName: '', amount: '', date: '', purpose: '' });
+      fetchDonations();
+      alert('Donation record saved.');
+    } catch(e) { console.error(e); }
+  };
+
+  const handleAddBloodRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'bloodDonation'), {
+        ...newBloodForm,
+        status: 'Active',
+        createdAt: serverTimestamp()
+      });
+      setNewBloodForm({ patientName: '', bloodGroup: 'A+', hospital: '', contactNumber: '', urgency: 'High' });
+      fetchAdsAndBlood();
+      alert('Blood request submitted.');
+    } catch(e) { console.error(e); }
+  };
+
+  const handleAddOverseas = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'overseasRegistration'), {
+        ...newOverseasForm,
+        status: 'Active',
+        createdAt: serverTimestamp()
+      });
+      setNewOverseasForm({ fullName: '', currentCountry: '', currentCity: '', phone: '', homeVillage: '' });
+      fetchAdsAndBlood();
+      alert('Overseas record saved.');
+    } catch(e) { console.error(e); }
+  };
+
   const handleAddAd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -343,17 +421,16 @@ export function Admin() {
   const handleAddCabinet = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const userObj = activeMembers.find(m => m.id === newCabinetForm.userId);
-      if (!userObj) return alert("Please select a valid member");
-      let profileImage = userObj.profileImage || userObj.profileImageUrl || '';
+      if (!newCabinetForm.name.trim()) return alert("Please enter a name");
+      let profileImage = '';
       if (cabinetImage) {
         const imageRef = ref(storage, `cabinet/${Date.now()}-${cabinetImage.name}`);
         await uploadBytes(imageRef, cabinetImage);
         profileImage = await getDownloadURL(imageRef);
       }
       await addDoc(collection(db, 'cabinet'), {
-        userId: userObj.id,
-        name: userObj.fullName || userObj.name || '',
+        userId: '',
+        name: newCabinetForm.name,
         profileImage,
         position: newCabinetForm.position,
         tenure: { startDate: newCabinetForm.startDate, endDate: newCabinetForm.endDate },
@@ -361,7 +438,7 @@ export function Admin() {
         createdAt: serverTimestamp()
       });
       alert('Cabinet member added');
-      setNewCabinetForm({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+      setNewCabinetForm({ name: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
       setCabinetImage(null);
       fetchCabinet();
     } catch (error) {
@@ -573,6 +650,15 @@ export function Admin() {
 
           {activeTab === 'members' && (
             <div className="space-y-8">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Member Manually</h3>
+                <form onSubmit={handleAddMember} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <input required value={newMemberForm.fullName} onChange={e => setNewMemberForm({...newMemberForm, fullName: e.target.value})} placeholder="Full Name" className="border rounded-lg px-4 py-2" />
+                  <input required value={newMemberForm.phone} onChange={e => setNewMemberForm({...newMemberForm, phone: e.target.value})} placeholder="Phone" className="border rounded-lg px-4 py-2" />
+                  <input required value={newMemberForm.cnic} onChange={e => setNewMemberForm({...newMemberForm, cnic: e.target.value})} placeholder="CNIC" className="border rounded-lg px-4 py-2" />
+                  <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-md">Save Member</button>
+                </form>
+              </div>
               {/* Pending Members */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -698,14 +784,49 @@ export function Admin() {
             </div>
           )}
 
+          
           {activeTab === 'donations' && (
-            <div className="bg-white p-8 text-center text-gray-500 rounded-xl shadow-sm border border-gray-100">
-              Donations management view coming in Phase 2.
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Record Donation</h3>
+                <form onSubmit={handleAddDonation} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <input required value={newDonationForm.donorName} onChange={e => setNewDonationForm({...newDonationForm, donorName: e.target.value})} placeholder="Donor Name" className="border rounded-lg px-4 py-2" />
+                  <input required value={newDonationForm.amount} onChange={e => setNewDonationForm({...newDonationForm, amount: e.target.value})} placeholder="Amount (e.g. 5000 PKR)" className="border rounded-lg px-4 py-2" />
+                  <input required type="date" value={newDonationForm.date} onChange={e => setNewDonationForm({...newDonationForm, date: e.target.value})} className="border rounded-lg px-4 py-2" />
+                  <input required value={newDonationForm.purpose} onChange={e => setNewDonationForm({...newDonationForm, purpose: e.target.value})} placeholder="Purpose" className="border rounded-lg px-4 py-2" />
+                  <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-md">Save Donation</button>
+                </form>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Donations</h3>
+                <div className="space-y-3">
+                  {donations.length === 0 ? <p className="text-gray-500">No donations recorded yet.</p> : donations.map(d => (
+                    <div key={d.id} className="p-4 border rounded-lg flex justify-between items-center">
+                      <div><b className="block">{d.donorName}</b><span className="text-sm text-gray-500">{d.purpose} · {d.date}</span></div>
+                      <span className="font-bold text-green-600">{d.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
+
           {activeTab === 'blood' && (
             <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Submit Blood Request</h3>
+                <form onSubmit={handleAddBloodRequest} className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <input required value={newBloodForm.patientName} onChange={e => setNewBloodForm({...newBloodForm, patientName: e.target.value})} placeholder="Patient Name" className="border rounded-lg px-4 py-2 md:col-span-2" />
+                  <select value={newBloodForm.bloodGroup} onChange={e => setNewBloodForm({...newBloodForm, bloodGroup: e.target.value})} className="border rounded-lg px-4 py-2">
+                    <option value="A+">A+</option><option value="O+">O+</option><option value="B+">B+</option><option value="AB+">AB+</option>
+                    <option value="A-">A-</option><option value="O-">O-</option><option value="B-">B-</option><option value="AB-">AB-</option>
+                  </select>
+                  <input required value={newBloodForm.hospital} onChange={e => setNewBloodForm({...newBloodForm, hospital: e.target.value})} placeholder="Hospital/City" className="border rounded-lg px-4 py-2" />
+                  <input required value={newBloodForm.contactNumber} onChange={e => setNewBloodForm({...newBloodForm, contactNumber: e.target.value})} placeholder="Contact #" className="border rounded-lg px-4 py-2" />
+                  <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-md">Add Request</button>
+                </form>
+              </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2"><Droplet className="text-red-500" /> Emergency Blood Database</h3>
@@ -811,6 +932,16 @@ export function Admin() {
 
           {activeTab === 'overseas' && (
             <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Add Overseas Member</h3>
+                <form onSubmit={handleAddOverseas} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <input required value={newOverseasForm.fullName} onChange={e => setNewOverseasForm({...newOverseasForm, fullName: e.target.value})} placeholder="Full Name" className="border rounded-lg px-4 py-2" />
+                  <input required value={newOverseasForm.currentCountry} onChange={e => setNewOverseasForm({...newOverseasForm, currentCountry: e.target.value})} placeholder="Country" className="border rounded-lg px-4 py-2" />
+                  <input required value={newOverseasForm.currentCity} onChange={e => setNewOverseasForm({...newOverseasForm, currentCity: e.target.value})} placeholder="City" className="border rounded-lg px-4 py-2" />
+                  <input required value={newOverseasForm.phone} onChange={e => setNewOverseasForm({...newOverseasForm, phone: e.target.value})} placeholder="Phone" className="border rounded-lg px-4 py-2" />
+                  <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition-colors shadow-md">Add Member</button>
+                </form>
+              </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-gray-800">Overseas Registrations</h3>
@@ -863,11 +994,8 @@ export function Admin() {
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Assign Cabinet Member</h3>
                 <form onSubmit={handleAddCabinet} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Active Member</label>
-                    <select required value={newCabinetForm.userId} onChange={(e) => setNewCabinetForm({...newCabinetForm, userId: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option value="">-- Select Member --</option>
-                      {activeMembers.map(m => <option key={m.id} value={m.id}>{m.fullName || m.name} ({m.cardNumber || m.membershipNumber || 'No ID'})</option>)}
-                    </select>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cabinet Member Name</label>
+                    <input required type="text" placeholder="Full Name" value={newCabinetForm.name} onChange={(e) => setNewCabinetForm({...newCabinetForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
@@ -897,7 +1025,7 @@ export function Admin() {
                     <textarea value={newCabinetForm.responsibilities} onChange={(e) => setNewCabinetForm({...newCabinetForm, responsibilities: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" rows={2}></textarea>
                   </div>
                   <div className="md:col-span-2 flex justify-end">
-                    <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">Submit Cabinet Member</button>
+                    <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md transition-colors">Submit Cabinet Member</button>
                   </div>
                 </form>
               </div>
@@ -947,7 +1075,7 @@ export function Admin() {
                     <textarea required placeholder="Key points discussed..." value={newMeetingForm.summary} onChange={(e) => setNewMeetingForm({...newMeetingForm, summary: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 min-h-[100px]"></textarea>
                   </div>
                   <div className="md:col-span-2 flex justify-end">
-                    <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Save Meeting Record</button>
+                    <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-colors">Save Meeting Record</button>
                   </div>
                 </form>
               </div>
@@ -1001,7 +1129,7 @@ export function Admin() {
                       <textarea required value={newNewsForm.content} onChange={(e) => setNewNewsForm({...newNewsForm, content: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 min-h-[100px]"></textarea>
                     </div>
                     <div className="flex justify-end mt-4">
-                      <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Publish News</button>
+                      <button type="submit" className="w-full bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-colors">Publish News</button>
                     </div>
                   </form>
                 </div>
@@ -1049,7 +1177,7 @@ export function Admin() {
                       <textarea required value={newEventForm.description} onChange={(e) => setNewEventForm({...newEventForm, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" rows={2}></textarea>
                     </div>
                     <div className="flex justify-end mt-4">
-                      <button type="submit" className="bg-secondary hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Schedule Event</button>
+                      <button type="submit" className="w-full bg-secondary hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-colors">Schedule Event</button>
                     </div>
                   </form>
                 </div>
