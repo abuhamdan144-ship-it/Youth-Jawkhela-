@@ -1,0 +1,6 @@
+{
+  "name": "Zwanan Jawkhela",
+  "description": "Professional welfare organization website and community portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
