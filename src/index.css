@@ -67,3 +67,15 @@
 /* Requested accessible admin palette and mobile action sizing */
 [class*='min-h-screen'] input,[class*='min-h-screen'] textarea,[class*='min-h-screen'] select{color:#101817}
 @media(max-width:640px){.overflow-x-auto table{min-width:720px}[class*='min-h-screen'] form button{min-height:44px}}
+
+/* Homepage cabinet stream: continuous right-to-left flow */
+.cabinet-strip{overflow:hidden}
+.cabinet-strip .container{overflow:hidden}
+.cabinet-marquee{will-change:transform}
+.cabinet-marquee:hover,.cabinet-marquee:focus-within{animation-play-state:paused}
+.cabinet-card{flex:0 0 235px}
+.cabinet-card b,.cabinet-card small{white-space:nowrap}
+@media(max-width:540px){.cabinet-card{flex-basis:210px}.cabinet-marquee{gap:10px;animation-duration:22s}}
+
+/* Homepage cabinet stream: continuous right-to-left flow */
+.cabinet-strip{overflow:hidden}.cabinet-strip .container{overflow:hidden}.cabinet-marquee{will-change:transform}.cabinet-marquee:hover,.cabinet-marquee:focus-within{animation-play-state:paused}.cabinet-card{flex:0 0 235px}.cabinet-card b,.cabinet-card small{white-space:nowrap}@media(max-width:540px){.cabinet-card{flex-basis:210px}.cabinet-marquee{gap:10px;animation-duration:22s}}

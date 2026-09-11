@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth, googleProvider, db } from '../lib/firebase';
+import { auth, googleProvider, db, storage } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -34,6 +35,7 @@ export function Admin() {
   
   // Form states
   const [newCabinetForm, setNewCabinetForm] = useState({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+  const [cabinetImage, setCabinetImage] = useState<File | null>(null);
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
@@ -381,11 +383,16 @@ export function Admin() {
     try {
       const userObj = activeMembers.find(m => m.id === newCabinetForm.userId);
       if (!userObj) return alert("Please select a valid member");
-      
+      let profileImage = userObj.profileImage || userObj.profileImageUrl || '';
+      if (cabinetImage) {
+        const imageRef = ref(storage, `cabinet/${Date.now()}-${cabinetImage.name}`);
+        await uploadBytes(imageRef, cabinetImage);
+        profileImage = await getDownloadURL(imageRef);
+      }
       await addDoc(collection(db, 'cabinet'), {
         userId: userObj.id,
         name: userObj.fullName || userObj.name || '',
-        profileImage: userObj.profileImage || userObj.profileImageUrl || '',
+        profileImage,
         position: newCabinetForm.position,
         tenure: { startDate: newCabinetForm.startDate, endDate: newCabinetForm.endDate },
         responsibilities: newCabinetForm.responsibilities,
@@ -393,6 +400,7 @@ export function Admin() {
       });
       alert('Cabinet member added');
       setNewCabinetForm({ userId: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+      setCabinetImage(null);
       fetchCabinet();
     } catch (error) {
       console.error(error);
@@ -918,11 +926,16 @@ export function Admin() {
                     <input type="date" required value={newCabinetForm.endDate} onChange={(e) => setNewCabinetForm({...newCabinetForm, endDate: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" />
                   </div>
                   <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cabinet member image</label>
+                    <input type="file" accept="image/*" onChange={(e) => setCabinetImage(e.target.files?.[0] || null)} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" />
+                    <p className="text-xs text-gray-500 mt-1">Optional JPG or PNG. The image will appear on the cabinet page and homepage.</p>
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Responsibilities / Bio</label>
                     <textarea value={newCabinetForm.responsibilities} onChange={(e) => setNewCabinetForm({...newCabinetForm, responsibilities: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" rows={2}></textarea>
                   </div>
                   <div className="md:col-span-2 flex justify-end">
-                    <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Add to Cabinet</button>
+                    <button type="submit" className="bg-primary hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">Submit Cabinet Member</button>
                   </div>
                 </form>
               </div>
