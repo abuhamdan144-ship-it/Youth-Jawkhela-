@@ -10,7 +10,7 @@ export function News() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const q = query(collection(db, 'news'), orderBy('date', 'desc'));
+        const q = query(collection(db, 'announcements'), orderBy('date', 'desc'));
         const snapshot = await getDocs(q);
         const data: any[] = [];
         snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));

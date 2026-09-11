@@ -37,7 +37,7 @@ export function Admin() {
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
-  const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '' });
+  const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
 
   useEffect(() => {
     getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
@@ -220,20 +220,32 @@ export function Admin() {
 
   const deleteCabinetMember = async (id: string) => {
     if(!confirm('Delete cabinet member?')) return;
-    try {
-      await deleteDoc(doc(db, 'cabinet', id));
-      fetchCabinet();
-    } catch (e) { console.error(e); }
+    try { await deleteDoc(doc(db, 'cabinet', id)); fetchCabinet(); } catch (e) { console.error(e); }
+  };
+
+  const editCabinetMember = async (member: any) => {
+    const position = prompt('Position', member.position || 'General Member');
+    if (!position) return;
+    const responsibilities = prompt('Responsibilities / bio', member.responsibilities || '') ?? (member.responsibilities || '');
+    try { await updateDoc(doc(db, 'cabinet', member.id), { position, responsibilities }); fetchCabinet(); } catch (e) { console.error(e); alert('Failed to update cabinet member.'); }
+  };
+
+  const editMember = async (member: any) => {
+    const fullName = prompt('Member name', member.fullName || member.name || '');
+    if (!fullName) return;
+    const phone = prompt('Phone number', member.phone || '') ?? (member.phone || '');
+    try { await updateDoc(doc(db, 'memberships', member.id), { fullName, name: fullName, phone }); fetchMembers(); } catch (e) { console.error(e); alert('Failed to update member.'); }
   };
 
   const handleAddAd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await addDoc(collection(db, 'paidAds'), {
-        ...newAdForm,
+        ...newAdForm, durationDays: Number(newAdForm.durationDays) || 30,
+        expiresAt: new Date(Date.now() + (Number(newAdForm.durationDays) || 30) * 86400000),
         createdAt: serverTimestamp()
       });
-      setNewAdForm({ title: '', businessName: '', cta: '', description: '', imageUrl: '' });
+      setNewAdForm({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
       fetchAdsAndBlood();
       alert('Ad added!');
     } catch (e) { console.error(e); }
@@ -410,7 +422,7 @@ export function Admin() {
   const handleAddNews = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'news'), {
+      await addDoc(collection(db, 'announcements'), {
         ...newNewsForm,
         createdAt: serverTimestamp()
       });
@@ -702,12 +714,8 @@ export function Admin() {
                                 >
                                   WhatsApp
                                 </button>
-                                <button 
-                                  onClick={() => deleteMember(member.id)}
-                                  className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                                >
-                                  Delete
-                                </button>
+                                <button onClick={() => editMember(member)} className="flex items-center gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1.5 rounded text-sm font-medium transition-colors">Edit</button>
+                                <button onClick={() => deleteMember(member.id)} className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors">Delete</button>
                               </div>
                             </td>
                           </tr>
@@ -927,7 +935,7 @@ export function Admin() {
                       <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
                         <th className="p-4 font-medium">Name</th>
                         <th className="p-4 font-medium">Position</th>
-                        <th className="p-4 font-medium">Term</th>
+                        <th className="p-4 font-medium">Term</th><th className="p-4 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -936,6 +944,7 @@ export function Admin() {
                           <td className="p-4 font-medium text-gray-900">{member.name}</td>
                           <td className="p-4 text-sm text-gray-700 font-semibold">{member.position}</td>
                           <td className="p-4 text-sm text-gray-500">{new Date(member.tenure?.startDate).toLocaleDateString()} - {new Date(member.tenure?.endDate).toLocaleDateString()}</td>
+                          <td className="p-4 flex gap-2"><button onClick={() => editCabinetMember(member)} className="bg-green-100 text-green-800 px-3 py-1.5 rounded text-sm font-medium">Edit</button><button onClick={() => deleteCabinetMember(member.id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded text-sm font-medium">Delete</button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -1004,6 +1013,7 @@ export function Admin() {
                           <option value="News">News</option>
                           <option value="Update">Update</option>
                           <option value="Emergency">Emergency</option>
+                          <option value="Takaar">Takaar (Community Notice)</option>
                         </select>
                       </div>
                       <div>
@@ -1107,6 +1117,10 @@ export function Admin() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea required value={newAdForm.description} onChange={e => setNewAdForm({...newAdForm, description: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration (days)</label>
+                    <input required type="number" min="1" value={newAdForm.durationDays} onChange={e => setNewAdForm({...newAdForm, durationDays: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Background Image</label>

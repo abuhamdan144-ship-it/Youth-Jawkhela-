@@ -36,16 +36,12 @@ export function Membership() {
       // In a real app, we would upload the photo to Firebase Storage first
       // and get the URL to store in the document.
       
-      await addDoc(collection(db, 'users'), {
-        ...data,
-        registrationDate: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
-        membershipStatus: 'pending',
-        isAdmin: false,
-        isOverseas: data.membershipTier === 'overseas',
-        membershipCardGenerated: false,
-        certificateGenerated: false,
-        profileImage: '', // Placeholder
+      await addDoc(collection(db, 'memberships'), {
+        fullName: data.name, name: data.name, email: data.email, phone: data.phone,
+        cnic: data.cnic, address: data.address, village: 'Jawkhela',
+        bloodGroup: data.bloodType, bloodType: data.bloodType,
+        membershipTier: data.membershipTier, country: data.country || '',
+        status: 'Pending', createdAt: serverTimestamp(), profileImageUrl: '',
       });
       
       setSubmitSuccess(true);

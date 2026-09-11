@@ -63,3 +63,7 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-33.333333%); }
 }
+
+/* Requested accessible admin palette and mobile action sizing */
+[class*='min-h-screen'] input,[class*='min-h-screen'] textarea,[class*='min-h-screen'] select{color:#101817}
+@media(max-width:640px){.overflow-x-auto table{min-width:720px}[class*='min-h-screen'] form button{min-height:44px}}
