@@ -294,81 +294,32 @@ export function Admin() {
   };
 
   const generatePDFCard = async (member: any) => {
-    // We create a temporary hidden div to render the card
     const cardElement = document.createElement('div');
-    cardElement.style.width = '600px';
-    cardElement.style.height = '350px';
-    cardElement.style.background = 'linear-gradient(135deg, #27AE60 0%, #1C3A47 100%)';
-    cardElement.style.position = 'absolute';
-    cardElement.style.left = '-9999px';
-    cardElement.style.color = 'white';
-    cardElement.style.padding = '30px';
-    cardElement.style.fontFamily = 'sans-serif';
-    cardElement.style.borderRadius = '16px';
-    
+    const name = member.fullName || member.name || 'Community Member';
+    const initials = name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase();
+    const expiry = member.expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    cardElement.style.cssText = 'width:900px;height:568px;position:absolute;left:-9999px;color:white;padding:42px;background:linear-gradient(135deg,#075448,#0b806d 58%,#55c69c);font-family:Arial,sans-serif;border-radius:28px;overflow:hidden;box-sizing:border-box;';
     cardElement.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 20px;">
-        <div>
-          <h2 style="margin: 0; font-size: 28px; color: #F39C12;">Zwanan Jawkhela</h2>
-          <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9;">Official Membership Card</p>
-        </div>
-        <div style="width: 50px; height: 50px; background: white; border-radius: 25px; display: flex; align-items: center; justify-content: center; color: #27AE60; font-weight: bold; font-size: 20px;">
-          ZJ
-        </div>
+      <div style="position:absolute;inset:-240px 35% 80% -25%;background:linear-gradient(125deg,transparent 34%,rgba(255,255,255,.16) 35%,rgba(255,255,255,.02) 52%,transparent 53%);transform:rotate(12deg)"></div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:16px"><img src="/zj-logo-emerald.png" crossorigin="anonymous" style="width:58px;height:58px;object-fit:contain;border-radius:16px;background:white" /><div><div style="font-size:24px;font-weight:800">Zwanan Jawkhela</div><div style="font-size:12px;opacity:.75;margin-top:4px">YOUTH WELFARE COMMUNITY</div></div></div>
+        <div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#c8f5d9">✓ VERIFIED MEMBER</div>
       </div>
-      
-      <div style="display: flex; gap: 30px;">
-        <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-          <span style="font-size: 40px; color: white;">👤</span>
-        </div>
-        <div style="flex: 1;">
-          <div style="margin-bottom: 12px;">
-            <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Member Name</p>
-            <p style="margin: 0; font-size: 24px; font-weight: bold;">${member.fullName || member.name}</p>
-          </div>
-          <div style="display: flex; gap: 40px; margin-bottom: 12px;">
-            <div>
-              <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Membership No.</p>
-              <p style="margin: 0; font-size: 16px; font-family: monospace;">${member.cardNumber || member.membershipNumber || 'Pending'}</p>
-            </div>
-            <div>
-              <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">Blood Group</p>
-              <p style="margin: 0; font-size: 16px; color: #ff4757; font-weight: bold;">${member.bloodGroup || member.bloodType}</p>
-            </div>
-          </div>
-          <div>
-            <p style="margin: 0; font-size: 12px; color: #F39C12; text-transform: uppercase;">CNIC</p>
-            <p style="margin: 0; font-size: 16px; font-family: monospace;">${member.cnic}</p>
-          </div>
-        </div>
+      <div style="position:relative;display:flex;align-items:center;gap:22px;margin-top:72px">
+        <div style="width:116px;height:140px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:42px;font-weight:800">${member.profileImageUrl ? `<img src="${member.profileImageUrl}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover" />` : initials}</div>
+        <div style="flex:1"><div style="font-size:11px;letter-spacing:2px;opacity:.7">OFFICIAL MEMBER</div><div style="font-size:36px;font-weight:800;margin:12px 0 8px">${name}</div><div style="font-size:18px;color:#f5c873;font-weight:700;letter-spacing:1px">${member.cardNumber || member.membershipNumber || 'ZJ-2026-000'}</div></div>
+        <div style="width:82px;height:82px;border:3px solid rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:2px">SCAN</div>
       </div>
-      
-      <div style="margin-top: 30px; text-align: center; font-size: 10px; opacity: 0.7;">
-        This card is the property of Zwanan Jawkhela Welfare Society. If found, please return to the administration.
-      </div>
-    `;
-
+      <div style="position:relative;display:flex;gap:48px;border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25);margin-top:46px;padding:18px 0"><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">BLOOD GROUP</small><b style="font-size:17px">${member.bloodGroup || member.bloodType || '—'}</b></div><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">VILLAGE</small><b style="font-size:17px">${member.village || 'Jawkhela'}</b></div><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">VALID THROUGH</small><b style="font-size:17px">${expiry}</b></div></div>
+      <div style="position:relative;display:flex;justify-content:space-between;margin-top:22px;font-size:11px;opacity:.75"><span>Jawkhela, Pakistan</span><span>Community service card</span></div>`;
     document.body.appendChild(cardElement);
-
     try {
-      const canvas = await html2canvas(cardElement, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'px',
-        format: [600, 350]
-      });
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, 600, 350);
-      const fileName = (member.fullName || member.name).replace(/\s+/g, '_');
-      pdf.save(`ZJ_Card_${fileName}.pdf`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF card.");
-    } finally {
-      document.body.removeChild(cardElement);
-    }
+      const canvas = await html2canvas(cardElement, { scale: 2, useCORS: true, backgroundColor: null });
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [900, 568] });
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 900, 568);
+      pdf.save(`ZJ_Emerald_Card_${name.replace(/\s+/g, '_')}.pdf`);
+    } catch (error) { console.error('Error generating PDF card:', error); alert('Failed to generate PDF card.'); }
+    finally { document.body.removeChild(cardElement); }
   };
 
   const initiateWhatsApp = (phone: string, name: string) => {
