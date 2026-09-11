@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { auth, googleProvider, db, storage } from '../lib/firebase';
+import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -14,6 +13,32 @@ const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'hiapp144@gmail.com', 'admin@zwa
 // Firestore rejects undefined values. Build write objects explicitly and remove only undefined fields.
 function withoutUndefined<T extends Record<string, any>>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, fieldValue]) => fieldValue !== undefined)) as T;
+}
+
+async function imageFileToDataUrl(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('Please select an image file.');
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = sourceUrl;
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error('The selected image could not be read.'));
+    });
+    const maxWidth = 1200;
+    const scale = Math.min(1, maxWidth / image.naturalWidth);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Image processing is not supported in this browser.');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+    if (dataUrl.length > 900000) throw new Error('Please choose a smaller image (under about 1 MB).');
+    return dataUrl;
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
 }
 
 
@@ -402,9 +427,7 @@ export function Admin() {
     try {
       let finalImageUrl = newAdForm.imageUrl;
       if (adImage) {
-        const imageRef = ref(storage, `ads/${Date.now()}-${adImage.name}`);
-        await uploadBytes(imageRef, adImage);
-        finalImageUrl = await getDownloadURL(imageRef);
+        finalImageUrl = await imageFileToDataUrl(adImage);
       }
 
       const durationDays = Number(newAdForm.durationDays);
@@ -510,9 +533,7 @@ export function Admin() {
       if (!newCabinetForm.name.trim()) return alert("Please enter a name");
       let profileImage = '';
       if (cabinetImage) {
-        const imageRef = ref(storage, `cabinet/${Date.now()}-${cabinetImage.name}`);
-        await uploadBytes(imageRef, cabinetImage);
-        profileImage = await getDownloadURL(imageRef);
+        profileImage = await imageFileToDataUrl(cabinetImage);
       }
       await addDoc(collection(db, 'cabinet'), withoutUndefined({
         userId: user?.uid || '',
