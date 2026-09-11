@@ -40,6 +40,7 @@ export function Admin() {
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
   const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
+  const [adImage, setAdImage] = useState<File | null>(null);
 
   useEffect(() => {
     getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
@@ -242,12 +243,22 @@ export function Admin() {
   const handleAddAd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let finalImageUrl = newAdForm.imageUrl;
+      if (adImage) {
+        const imageRef = ref(storage, `ads/${Date.now()}-${adImage.name}`);
+        await uploadBytes(imageRef, adImage);
+        finalImageUrl = await getDownloadURL(imageRef);
+      }
+
       await addDoc(collection(db, 'paidAds'), {
-        ...newAdForm, durationDays: Number(newAdForm.durationDays) || 30,
+        ...newAdForm, 
+        imageUrl: finalImageUrl,
+        durationDays: Number(newAdForm.durationDays) || 30,
         expiresAt: new Date(Date.now() + (Number(newAdForm.durationDays) || 30) * 86400000),
         createdAt: serverTimestamp()
       });
       setNewAdForm({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
+      setAdImage(null);
       fetchAdsAndBlood();
       alert('Ad added!');
     } catch (e) { console.error(e); }
@@ -1094,6 +1105,7 @@ export function Admin() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          setAdImage(file);
                           const reader = new FileReader();
                           reader.onloadend = () => setNewAdForm({...newAdForm, imageUrl: reader.result as string});
                           reader.readAsDataURL(file);
@@ -1103,7 +1115,7 @@ export function Admin() {
                     />
                     {newAdForm.imageUrl && <img src={newAdForm.imageUrl} className="mt-2 h-20 rounded object-cover" alt="Ad preview" />}
                   </div>
-                  <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg font-bold">Publish Ad</button>
+                  <button type="submit" className="w-full bg-primary text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition-colors mt-2">Publish Ad</button>
                 </form>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-h-[600px] overflow-y-auto">

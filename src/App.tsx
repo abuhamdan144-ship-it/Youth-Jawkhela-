@@ -53,14 +53,14 @@ function Ticker() {
 
   if (!items.length) return null;
   
-  const text = items.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
+  const tickerText = items.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
 
   return (
     <div className="glass-pipe">
       <div className="ticker-track">
-        <span><Megaphone size={14} className="ticker-icon" /> {text}</span>
-        <span><Megaphone size={14} className="ticker-icon" /> {text}</span>
-        <span><Megaphone size={14} className="ticker-icon" /> {text}</span>
+        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
+        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
+        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
       </div>
     </div>
   );

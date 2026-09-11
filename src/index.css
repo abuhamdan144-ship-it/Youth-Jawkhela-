@@ -9,6 +9,12 @@
 
 .admin-link{padding:8px 11px!important;border:1px solid #dce8e1;border-radius:7px;color:#4b6c65!important}.admin-link:hover,.admin-link.active{background:#eaf7f0;color:var(--green)!important}
 
+.bg-primary { background-color: var(--green); }
+.bg-primary:hover { background-color: var(--green-dark); }
+.bg-secondary { background-color: #f5c66f; }
+.text-primary { color: var(--green); }
+
+
 .sticky-group {
   position: sticky;
   top: 0;
