@@ -10,6 +10,11 @@ import html2canvas from 'html2canvas';
 // Simplified for MVP. We check if the logged in email is the admin.
 const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'hiapp144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
 
+// Firestore rejects undefined values. Build write objects explicitly and remove only undefined fields.
+function withoutUndefined<T extends Record<string, any>>(value: T): T {
+  return Object.fromEntries(Object.entries(value).filter(([, fieldValue]) => fieldValue !== undefined)) as T;
+}
+
 
 const AdminItemActions = ({ 
   collectionName, 
@@ -325,13 +330,13 @@ export function Admin() {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'memberships'), {
+      await addDoc(collection(db, 'memberships'), withoutUndefined({
         ...newMemberForm,
-        name: newMemberForm.fullName,
-        status: 'Active',
+        name: newMemberForm.fullName.trim(),
+        status: 'Approved',
         membershipTier: 'standard',
         createdAt: serverTimestamp()
-      });
+      }));
       setNewMemberForm({ fullName: '', phone: '', cnic: '', bloodGroup: 'O+', village: 'Jawkhela' });
       fetchMembers();
       alert('Member added manually.');
@@ -341,10 +346,13 @@ export function Admin() {
   const handleAddDonation = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'donations'), {
-        ...newDonationForm,
+      await addDoc(collection(db, 'donations'), withoutUndefined({
+        donorName: newDonationForm.donorName.trim(),
+        amount: Number(newDonationForm.amount),
+        date: newDonationForm.date,
+        purpose: newDonationForm.purpose.trim(),
         createdAt: serverTimestamp()
-      });
+      }));
       setNewDonationForm({ donorName: '', amount: '', date: '', purpose: '' });
       fetchDonations();
       alert('Donation record saved.');
@@ -354,11 +362,15 @@ export function Admin() {
   const handleAddBloodRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'bloodDonation'), {
-        ...newBloodForm,
+      await addDoc(collection(db, 'bloodDonation'), withoutUndefined({
+        patientName: newBloodForm.patientName.trim(),
+        bloodGroup: newBloodForm.bloodGroup,
+        hospital: newBloodForm.hospital.trim(),
+        contact: newBloodForm.contactNumber.trim(),
+        urgency: newBloodForm.urgency,
         status: 'Active',
         createdAt: serverTimestamp()
-      });
+      }));
       setNewBloodForm({ patientName: '', bloodGroup: 'A+', hospital: '', contactNumber: '', urgency: 'High' });
       fetchAdsAndBlood();
       alert('Blood request submitted.');
@@ -368,11 +380,16 @@ export function Admin() {
   const handleAddOverseas = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'overseasRegistration'), {
-        ...newOverseasForm,
-        status: 'Active',
+      await addDoc(collection(db, 'overseasRegistration'), withoutUndefined({
+        userId: user?.uid || '',
+        fullName: newOverseasForm.fullName.trim(),
+        currentCountry: newOverseasForm.currentCountry.trim(),
+        currentCity: newOverseasForm.currentCity.trim(),
+        phone: newOverseasForm.phone.trim(),
+        homeVillage: newOverseasForm.homeVillage.trim(),
+        status: 'Pending',
         createdAt: serverTimestamp()
-      });
+      }));
       setNewOverseasForm({ fullName: '', currentCountry: '', currentCity: '', phone: '', homeVillage: '' });
       fetchAdsAndBlood();
       alert('Overseas record saved.');
@@ -389,13 +406,20 @@ export function Admin() {
         finalImageUrl = await getDownloadURL(imageRef);
       }
 
-      await addDoc(collection(db, 'paidAds'), {
-        ...newAdForm, 
-        imageUrl: finalImageUrl,
-        durationDays: Number(newAdForm.durationDays) || 30,
-        expiresAt: new Date(Date.now() + (Number(newAdForm.durationDays) || 30) * 86400000),
+      const durationDays = Number(newAdForm.durationDays);
+      if (!Number.isInteger(durationDays) || durationDays < 1) {
+        throw new Error('Duration must be a whole number of at least 1 day.');
+      }
+      await addDoc(collection(db, 'paidAds'), withoutUndefined({
+        title: newAdForm.title.trim(),
+        businessName: newAdForm.businessName.trim(),
+        cta: newAdForm.cta.trim(),
+        description: newAdForm.description.trim(),
+        ...(finalImageUrl ? { imageUrl: finalImageUrl } : {}),
+        durationDays,
+        expiresAt: new Date(Date.now() + durationDays * 86400000),
         createdAt: serverTimestamp()
-      });
+      }));
       setNewAdForm({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
       setAdImage(null);
       fetchAdsAndBlood();
@@ -489,15 +513,18 @@ export function Admin() {
         await uploadBytes(imageRef, cabinetImage);
         profileImage = await getDownloadURL(imageRef);
       }
-      await addDoc(collection(db, 'cabinet'), {
-        userId: '',
-        name: newCabinetForm.name,
+      await addDoc(collection(db, 'cabinet'), withoutUndefined({
+        userId: user?.uid || '',
+        name: newCabinetForm.name.trim(),
         profileImage,
         position: newCabinetForm.position,
+        startDate: newCabinetForm.startDate,
+        endDate: newCabinetForm.endDate,
         tenure: { startDate: newCabinetForm.startDate, endDate: newCabinetForm.endDate },
-        responsibilities: newCabinetForm.responsibilities,
+        responsibilities: newCabinetForm.responsibilities.trim(),
+        status: 'Active',
         createdAt: serverTimestamp()
-      });
+      }));
       alert('Cabinet member added');
       setNewCabinetForm({ name: '', position: 'President', startDate: '', endDate: '', responsibilities: '' });
       setCabinetImage(null);
@@ -511,13 +538,16 @@ export function Admin() {
   const handleAddMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'cabinetMeetings'), {
+      await addDoc(collection(db, 'cabinetMeetings'), withoutUndefined({
         date: newMeetingForm.date,
-        location: newMeetingForm.location,
-        summary: newMeetingForm.summary,
+        agenda: newMeetingForm.summary.trim(),
+        minutes: newMeetingForm.summary.trim(),
+        summary: newMeetingForm.summary.trim(),
         decisions: [],
+        attendees: [],
+        location: newMeetingForm.location.trim(),
         createdAt: serverTimestamp()
-      });
+      }));
       alert('Meeting recorded');
       setNewMeetingForm({ date: '', location: '', summary: '' });
       fetchMeetings();
@@ -530,10 +560,13 @@ export function Admin() {
   const handleAddNews = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'announcements'), {
-        ...newNewsForm,
+      await addDoc(collection(db, 'announcements'), withoutUndefined({
+        title: newNewsForm.title.trim(),
+        category: newNewsForm.category,
+        date: newNewsForm.date,
+        content: newNewsForm.content.trim(),
         createdAt: serverTimestamp()
-      });
+      }));
       alert('News published');
       setNewNewsForm({ title: '', category: 'Announcement', date: '', content: '' });
       fetchNewsAndEvents();
@@ -546,10 +579,15 @@ export function Admin() {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'events'), {
-        ...newEventForm,
+      await addDoc(collection(db, 'events'), withoutUndefined({
+        title: newEventForm.title.trim(),
+        type: newEventForm.type,
+        date: newEventForm.date,
+        time: newEventForm.time,
+        location: newEventForm.location.trim(),
+        description: newEventForm.description.trim(),
         createdAt: serverTimestamp()
-      });
+      }));
       alert('Event scheduled');
       setNewEventForm({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
       fetchNewsAndEvents();
@@ -1102,7 +1140,7 @@ export function Admin() {
                         <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                           <td className="p-4 font-medium text-gray-900">{member.name}</td>
                           <td className="p-4 text-sm text-gray-700 font-semibold">{member.position}</td>
-                          <td className="p-4 text-sm text-gray-500">{new Date(member.tenure?.startDate).toLocaleDateString()} - {new Date(member.tenure?.endDate).toLocaleDateString()}</td>
+                          <td className="p-4 text-sm text-gray-500">{new Date(member.startDate || member.tenure?.startDate).toLocaleDateString()} - {new Date(member.endDate || member.tenure?.endDate).toLocaleDateString()}</td>
                           <td className="p-4">
                             <AdminItemActions 
                               collectionName="cabinet" 
