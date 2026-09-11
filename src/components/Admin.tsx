@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 // Simplified for MVP. We check if the logged in email is the admin.
-const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
+const ADMIN_EMAILS = ['hiapp144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
 
 export function Admin() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
