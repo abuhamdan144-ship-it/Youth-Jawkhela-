@@ -66,9 +66,10 @@ export function MembershipPage() {
       const q = query(collection(db, 'memberships'), where('cnic', '==', checkCnic));
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+        const docSnap = snapshot.docs[0];
+        const data = { id: docSnap.id, ...docSnap.data() } as Record<string, any>;
         setMemberData(data);
-        setStatusMessage(`Status: ${data.status}`);
+        setStatusMessage(`Status: ${data.status || 'Pending'}`);
       } else {
         setStatusMessage('No membership found for this CNIC.');
       }
