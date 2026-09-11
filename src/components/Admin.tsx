@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
-import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper } from 'lucide-react';
+import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -17,6 +17,7 @@ export function Admin() {
   const [loginError, setLoginError] = useState('');
   const [authorized, setAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingMembers, setPendingMembers] = useState<any[]>([]);
   const [activeMembers, setActiveMembers] = useState<any[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -365,23 +366,25 @@ export function Admin() {
     );
   }
 
+  const selectTab = (tab: string) => { setActiveTab(tab); setSidebarOpen(false); };
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen min-w-0 bg-gray-100">
+      {sidebarOpen && <button aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-20 bg-black/40 lg:hidden" />}
       {/* Sidebar */}
-      <div className="w-64 bg-accent text-white shadow-xl flex flex-col">
+      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-accent text-white shadow-xl flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 border-b border-gray-700">
           <h2 className="text-xl font-bold text-secondary">Admin Dashboard</h2>
           <p className="text-sm text-gray-400 mt-1">{user.email}</p>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           <button 
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => selectTab('dashboard')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'dashboard' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <LayoutDashboard size={20} /> Dashboard
           </button>
           <button 
-            onClick={() => setActiveTab('members')}
+            onClick={() => selectTab('members')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'members' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <Users size={20} /> Membership
@@ -390,31 +393,31 @@ export function Admin() {
             )}
           </button>
           <button 
-            onClick={() => setActiveTab('donations')}
+            onClick={() => selectTab('donations')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'donations' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <CreditCard size={20} /> Donations
           </button>
           <button 
-            onClick={() => setActiveTab('blood')}
+            onClick={() => selectTab('blood')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'blood' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <Droplet size={20} /> Blood Database
           </button>
           <button 
-            onClick={() => setActiveTab('cabinet')}
+            onClick={() => selectTab('cabinet')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'cabinet' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <Briefcase size={20} /> Cabinet Members
           </button>
           <button 
-            onClick={() => setActiveTab('meetings')}
+            onClick={() => selectTab('meetings')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'meetings' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <FileText size={20} /> Meetings
           </button>
           <button 
-            onClick={() => setActiveTab('news')}
+            onClick={() => selectTab('news')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'news' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
           >
             <Newspaper size={20} /> News & Events
@@ -431,12 +434,12 @@ export function Admin() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10 p-4 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeTab.replace('-', ' ')}</h1>
+          <div className="flex items-center gap-3"><button aria-label="Open navigation" onClick={() => setSidebarOpen(true)} className="lg:hidden rounded-lg p-2 text-gray-600 hover:bg-gray-100"><Menu size={22} /></button><h1 className="text-xl sm:text-2xl font-bold text-gray-800 capitalize">{activeTab.replace('-', ' ')}</h1></div>
         </header>
         
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 min-w-0 overflow-auto p-4 sm:p-8">
           {activeTab === 'dashboard' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
@@ -749,7 +752,7 @@ export function Admin() {
 
           {activeTab === 'news' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* News Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Publish News / Announcement</h3>
@@ -791,13 +794,13 @@ export function Admin() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
                       <input type="text" required value={newEventForm.title} onChange={(e) => setNewEventForm({...newEventForm, title: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                         <input type="date" required value={newEventForm.date} onChange={(e) => setNewEventForm({...newEventForm, date: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                         <input type="time" required value={newEventForm.time} onChange={(e) => setNewEventForm({...newEventForm, time: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" />
                       </div>
                     </div>
