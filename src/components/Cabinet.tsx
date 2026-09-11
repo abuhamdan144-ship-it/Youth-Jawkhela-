@@ -3,6 +3,7 @@ import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Users, FileText, MapPin, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { Cabinet as CabinetType, CabinetMeeting } from '../types';
+import { ImageStreamHero } from './ui/image-stream-hero';
 
 export function Cabinet() {
   const [cabinet, setCabinet] = useState<any[]>([]);
@@ -63,7 +64,24 @@ export function Cabinet() {
             Cabinet members will be announced shortly.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <>
+            <ImageStreamHero
+              images={cabinet.map((member) => ({
+                src: member.profileImage || '/zj-logo-emerald.png',
+                alt: `${member.name || 'Cabinet member'} profile`,
+              }))}
+              cards={Math.max(6, Math.min(cabinet.length * 2, 10))}
+              speed={20}
+              axis={56}
+              className="mb-10 h-[300px] w-full rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-950 shadow-xl sm:h-[380px]"
+            >
+              <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center text-white">
+                <span className="mb-3 rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.24em] text-emerald-100 backdrop-blur-sm">Serving together</span>
+                <h3 className="text-3xl font-bold sm:text-5xl">Cabinet in motion</h3>
+                <p className="mt-3 max-w-lg text-sm text-emerald-50/80 sm:text-base">Our community leadership, moving forward with unity and purpose.</p>
+              </div>
+            </ImageStreamHero>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {cabinet.map((member) => (
               <div key={member.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="h-24 bg-accent"></div>
@@ -91,7 +109,8 @@ export function Cabinet() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
