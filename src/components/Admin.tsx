@@ -10,6 +10,61 @@ import html2canvas from 'html2canvas';
 // Simplified for MVP. We check if the logged in email is the admin.
 const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'hiapp144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
 
+
+const AdminItemActions = ({ 
+  collectionName, 
+  item, 
+  onRefresh, 
+  titleField,
+  onApprove,
+  onReject,
+  onDelete,
+  onSave,
+  extraButtons
+}: { 
+  collectionName: string, 
+  item: any, 
+  onRefresh: () => void, 
+  titleField: string,
+  onApprove?: () => void,
+  onReject?: () => void,
+  onDelete?: () => void,
+  onSave?: () => void,
+  extraButtons?: React.ReactNode
+}) => {
+  const handleApprove = onApprove || (async () => {
+    try { await updateDoc(doc(db, collectionName, item.id), { status: 'Approved' }); alert('Approved!'); onRefresh(); } catch (e:any) { alert(e.message); }
+  });
+  const handleReject = onReject || (async () => {
+    try { await updateDoc(doc(db, collectionName, item.id), { status: 'Rejected' }); alert('Rejected!'); onRefresh(); } catch (e:any) { alert(e.message); }
+  });
+  const handleDelete = onDelete || (async () => {
+    if(!confirm('Delete this item?')) return;
+    try { await deleteDoc(doc(db, collectionName, item.id)); alert('Deleted!'); onRefresh(); } catch (e:any) { alert(e.message); }
+  });
+  const handleSave = onSave || (async () => {
+    const newValue = prompt(`Edit ${titleField} (Save action):`, item[titleField] || '');
+    if (newValue === null) return;
+    try { 
+      await updateDoc(doc(db, collectionName, item.id), { [titleField]: newValue }); 
+      alert('Saved!'); 
+      onRefresh(); 
+    } catch (e:any) { 
+      alert(e.message); 
+    }
+  });
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-3 items-center">
+      <button onClick={handleSave} className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Save</button>
+      <button onClick={handleApprove} className="flex items-center gap-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Approve</button>
+      <button onClick={handleReject} className="flex items-center gap-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Reject</button>
+      <button onClick={handleDelete} className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Delete</button>
+      {extraButtons}
+    </div>
+  )
+}
+
 export function Admin() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +89,7 @@ export function Admin() {
   const [overseas, setOverseas] = useState<any[]>([]);
   
   // Form states
-  const [newCabinetForm, setNewCabinetForm] = useState({ name: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+  const [newCabinetForm, setNewCabinetForm] = useState({ name: '', position: 'President', startDate: '', endDate: '', responsibilities: '' });
   const [cabinetImage, setCabinetImage] = useState<File | null>(null);
   const [newMeetingForm, setNewMeetingForm] = useState({ date: '', location: '', summary: '' });
   const [newNewsForm, setNewNewsForm] = useState({ title: '', category: 'Announcement', date: '', content: '' });
@@ -438,12 +493,12 @@ export function Admin() {
         createdAt: serverTimestamp()
       });
       alert('Cabinet member added');
-      setNewCabinetForm({ name: '', position: 'General Member', startDate: '', endDate: '', responsibilities: '' });
+      setNewCabinetForm({ name: '', position: 'President', startDate: '', endDate: '', responsibilities: '' });
       setCabinetImage(null);
       fetchCabinet();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to add cabinet member');
+      alert(`Failed to save: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -699,24 +754,15 @@ export function Admin() {
                               </span>
                             </td>
                             <td className="p-4 flex gap-2">
-                              <button 
-                                onClick={() => approveMember(member.id)}
-                                className="flex items-center gap-1.5 bg-primary hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                              >
-                                <CheckCircle size={16} /> Approve
-                              </button>
-                              <button 
-                                onClick={() => rejectMember(member.id)}
-                                className="flex items-center gap-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => deleteMember(member.id)}
-                                className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                              >
-                                Delete
-                              </button>
+                              <AdminItemActions 
+                                collectionName="memberships" 
+                                item={member} 
+                                onRefresh={fetchMembers} 
+                                titleField="fullName" 
+                                onApprove={() => approveMember(member.id)}
+                                onReject={() => rejectMember(member.id)}
+                                onDelete={() => deleteMember(member.id)}
+                              />
                             </td>
                           </tr>
                         ))}
@@ -770,8 +816,14 @@ export function Admin() {
                                 >
                                   WhatsApp
                                 </button>
-                                <button onClick={() => editMember(member)} className="flex items-center gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1.5 rounded text-sm font-medium transition-colors">Edit</button>
-                                <button onClick={() => deleteMember(member.id)} className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors">Delete</button>
+                                <AdminItemActions 
+                                  collectionName="memberships" 
+                                  item={member} 
+                                  onRefresh={fetchMembers} 
+                                  titleField="fullName" 
+                                  onSave={() => editMember(member)} 
+                                  onDelete={() => deleteMember(member.id)} 
+                                />
                               </div>
                             </td>
                           </tr>
@@ -803,7 +855,10 @@ export function Admin() {
                   {donations.length === 0 ? <p className="text-gray-500">No donations recorded yet.</p> : donations.map(d => (
                     <div key={d.id} className="p-4 border rounded-lg flex justify-between items-center">
                       <div><b className="block">{d.donorName}</b><span className="text-sm text-gray-500">{d.purpose} · {d.date}</span></div>
-                      <span className="font-bold text-green-600">{d.amount}</span>
+                      <div>
+                        <span className="font-bold text-green-600 block text-right mb-2">{d.amount}</span>
+                        <AdminItemActions collectionName="donations" item={d} onRefresh={fetchDonations} titleField="donorName" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -913,12 +968,7 @@ export function Admin() {
                             <div className="text-sm text-gray-500">{req.contact}</div>
                           </td>
                           <td className="p-4">
-                              <button 
-                                onClick={() => deleteBloodRequest(req.id)}
-                                className="text-red-500 hover:text-red-700 text-sm font-bold"
-                              >
-                                Delete Request
-                              </button>
+                              <AdminItemActions collectionName="bloodDonation" item={req} onRefresh={fetchBloodRequests} titleField="patientName" />
                           </td>
                         </tr>
                       ))}
@@ -972,12 +1022,7 @@ export function Admin() {
                             <div className="text-sm text-gray-500">{reg['Phone']}</div>
                           </td>
                           <td className="p-4">
-                            <button 
-                              onClick={() => deleteOverseas(reg.id)}
-                              className="flex items-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                            >
-                              Delete
-                            </button>
+                            <AdminItemActions collectionName="overseasRegistration" item={reg} onRefresh={fetchOverseas} titleField="Full name" />
                           </td>
                         </tr>
                       ))}
@@ -1000,11 +1045,16 @@ export function Admin() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
                     <select required value={newCabinetForm.position} onChange={(e) => setNewCabinetForm({...newCabinetForm, position: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option value="Chairman">Chairman</option>
-                      <option value="Vice-Chairman">Vice-Chairman</option>
-                      <option value="Secretary">Secretary</option>
-                      <option value="Treasurer">Treasurer</option>
-                      <option value="General Member">General Member</option>
+                      <option value="President">President</option>
+                      <option value="Vice President">Vice President</option>
+                      <option value="General Secretary">General Secretary</option>
+                      <option value="Finance Secretary">Finance Secretary</option>
+                      <option value="Water & Electricity Secretary">Water & Electricity Secretary</option>
+                      <option value="Cleaning Secretary">Cleaning Secretary</option>
+                      <option value="Education Secretary">Education Secretary</option>
+                      <option value="Health Secretary">Health Secretary</option>
+                      <option value="Social Media / IT Secretary">Social Media / IT Secretary</option>
+                      <option value="Culture Secretary">Culture Secretary</option>
                     </select>
                   </div>
                   <div>
@@ -1047,7 +1097,16 @@ export function Admin() {
                           <td className="p-4 font-medium text-gray-900">{member.name}</td>
                           <td className="p-4 text-sm text-gray-700 font-semibold">{member.position}</td>
                           <td className="p-4 text-sm text-gray-500">{new Date(member.tenure?.startDate).toLocaleDateString()} - {new Date(member.tenure?.endDate).toLocaleDateString()}</td>
-                          <td className="p-4 flex gap-2"><button onClick={() => editCabinetMember(member)} className="bg-green-100 text-green-800 px-3 py-1.5 rounded text-sm font-medium">Edit</button><button onClick={() => deleteCabinetMember(member.id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded text-sm font-medium">Delete</button></td>
+                          <td className="p-4">
+                            <AdminItemActions 
+                              collectionName="cabinet" 
+                              item={member} 
+                              onRefresh={fetchCabinet} 
+                              titleField="name" 
+                              onSave={() => editCabinetMember(member)}
+                              onDelete={() => deleteCabinetMember(member.id)}
+                            />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1089,6 +1148,7 @@ export function Admin() {
                         <h4 className="font-semibold text-gray-900">{new Date(meeting.date).toLocaleDateString()} &mdash; {meeting.location}</h4>
                       </div>
                       <p className="text-gray-600 text-sm whitespace-pre-wrap">{meeting.summary}</p>
+                      <AdminItemActions collectionName="cabinetMeetings" item={meeting} onRefresh={fetchMeetings} titleField="summary" />
                     </div>
                   ))}
                   {meetings.length === 0 && <div className="p-6 text-gray-500 text-center">No meeting records found.</div>}
@@ -1143,7 +1203,7 @@ export function Admin() {
                           <p className="font-bold text-sm">{n.title}</p>
                           <p className="text-xs text-gray-500">{n.category}</p>
                         </div>
-                        <button onClick={() => deleteNews(n.id)} className="text-red-500 text-xs font-bold">Delete</button>
+                        <AdminItemActions collectionName="announcements" item={n} onRefresh={fetchNewsAndEvents} titleField="title" />
                       </div>
                     ))}
                   </div>
@@ -1191,7 +1251,7 @@ export function Admin() {
                           <p className="font-bold text-sm">{ev.title}</p>
                           <p className="text-xs text-gray-500">{ev.date} {ev.time}</p>
                         </div>
-                        <button onClick={() => deleteEvent(ev.id)} className="text-red-500 text-xs font-bold">Delete</button>
+                        <AdminItemActions collectionName="events" item={ev} onRefresh={fetchNewsAndEvents} titleField="title" />
                       </div>
                     ))}
                   </div>
@@ -1255,7 +1315,7 @@ export function Admin() {
                         <h4 className="font-bold">{ad.title}</h4>
                         <p className="text-sm text-gray-500">{ad.businessName}</p>
                       </div>
-                      <button onClick={() => deleteAd(ad.id)} className="text-red-500 text-sm font-bold">Delete</button>
+                      <AdminItemActions collectionName="paidAds" item={ad} onRefresh={fetchAds} titleField="title" />
                     </div>
                   ))}
                 </div>

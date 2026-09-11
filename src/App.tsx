@@ -22,10 +22,10 @@ const sections = [
   { key: 'overseasRegistration', title: 'Overseas Pakistanis Registration', description: 'Stay connected wherever life takes you.', icon: Globe2, path: '/overseas-registration', tone: 'indigo' },
 ];
 const fallbackCabinet = [
-  { name: 'President', position: 'Community President', responsibilities: 'Guiding the organization with integrity and service.', profileImage: '' },
+  { name: 'Community President', position: 'President', responsibilities: 'Guiding the organization with integrity and service.', profileImage: '' },
   { name: 'General Secretary', position: 'General Secretary', responsibilities: 'Coordinating programs, records, and community communication.', profileImage: '' },
-  { name: 'Welfare Coordinator', position: 'Welfare Coordinator', responsibilities: 'Connecting families with welfare and emergency support.', profileImage: '' },
-  { name: 'Youth Coordinator', position: 'Youth Coordinator', responsibilities: 'Building opportunities for young people to lead and serve.', profileImage: '' },
+  { name: 'Finance Secretary', position: 'Finance Secretary', responsibilities: 'Managing financial resources transparently.', profileImage: '' },
+  { name: 'Social Media / IT Secretary', position: 'Social Media / IT Secretary', responsibilities: 'Managing online presence and communication.', profileImage: '' },
 ];
 
 async function readCollection(name: string, sortField = 'createdAt') {
@@ -53,15 +53,45 @@ function Ticker() {
 
   if (!items.length) return null;
   
-  const tickerText = items.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
+  const isUrdu = (str: string) => /[\u0600-\u06FF]/.test(str);
+  
+  const urduItems = items.filter(item => isUrdu(text(item, 'title', 'message')) || text(item, 'category') === 'Takaar');
+  const englishItems = items.filter(item => !isUrdu(text(item, 'title', 'message')) && text(item, 'category') !== 'Takaar');
 
   return (
-    <div className="glass-pipe">
-      <div className="ticker-track">
-        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
-        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
-        <span><Megaphone size={14} className="ticker-icon" /> {tickerText}</span>
-      </div>
+    <div className="glass-pipe" style={{ flexDirection: 'column', padding: 0 }}>
+      {urduItems.length > 0 && (
+        <div style={{ width: '100%', overflow: 'hidden', padding: '8px 0', borderBottom: englishItems.length ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+           <div className="ticker-track reverse">
+             {(() => {
+               const trackText = urduItems.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
+               return (
+                 <>
+                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                 </>
+               )
+             })()}
+           </div>
+        </div>
+      )}
+      {englishItems.length > 0 && (
+        <div style={{ width: '100%', overflow: 'hidden', padding: '8px 0' }}>
+           <div className="ticker-track">
+             {(() => {
+               const trackText = englishItems.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
+               return (
+                 <>
+                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
+                 </>
+               )
+             })()}
+           </div>
+        </div>
+      )}
     </div>
   );
 }
