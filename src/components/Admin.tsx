@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper } from 'lucide-react';
@@ -12,6 +12,9 @@ const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'admin@zwanan-jawkhel.com'];
 export function Admin() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [pendingMembers, setPendingMembers] = useState<any[]>([]);
   const [activeMembers, setActiveMembers] = useState<any[]>([]);
@@ -113,6 +116,16 @@ export function Admin() {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Error signing in", error);
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch {
+      setLoginError('Login failed. Check your admin email and password, then try again.');
     }
   };
 
@@ -316,12 +329,14 @@ export function Admin() {
               Restricted access. Authorized personnel only.
             </p>
           </div>
-          <button
-            onClick={handleLogin}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-          >
-            Sign in with Google
-          </button>
+          <form onSubmit={handleEmailLogin} className="space-y-3 text-left">
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Admin email" className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-500" />
+            <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-500" />
+            {loginError && <p className="text-sm text-red-600">{loginError}</p>}
+            <button type="submit" className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-medium text-white bg-primary hover:bg-green-600 transition-colors">Sign in to admin</button>
+          </form>
+          <div className="flex items-center gap-3 text-xs text-gray-400"><span className="h-px bg-gray-200 flex-1" />or<span className="h-px bg-gray-200 flex-1" /></div>
+          <button onClick={handleLogin} className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors">Sign in with Google</button>
         </div>
       </div>
     );
