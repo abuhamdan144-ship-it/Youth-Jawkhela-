@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper } from 'lucide-react';
@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 // Simplified for MVP. We check if the logged in email is the admin.
-const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'admin@zwanan-jawkhel.com'];
+const ADMIN_EMAILS = ['abuhamdan144@gmail.com', 'admin@zwanan-jawkhel.com'].map((email) => email.trim().toLowerCase());
 
 export function Admin() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -15,6 +15,7 @@ export function Admin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [authorized, setAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [pendingMembers, setPendingMembers] = useState<any[]>([]);
   const [activeMembers, setActiveMembers] = useState<any[]>([]);
@@ -34,11 +35,14 @@ export function Admin() {
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
 
   useEffect(() => {
+    getRedirectResult(auth).catch((error) => setLoginError(`Google login failed: ${error?.code || 'try again'}`));
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-      
-      if (currentUser && ADMIN_EMAILS.includes(currentUser.email || '')) {
+      const normalizedEmail = currentUser?.email?.trim().toLowerCase() || '';
+      const isOwnerEmail = ADMIN_EMAILS.includes(normalizedEmail);
+      setAuthorized(Boolean(currentUser && isOwnerEmail));
+      if (currentUser && isOwnerEmail) {
         fetchMembers();
         fetchCabinet();
         fetchMeetings();
@@ -112,10 +116,16 @@ export function Admin() {
   };
 
   const handleLogin = async () => {
+    setLoginError('');
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error("Error signing in", error);
+      const code = (error as { code?: string })?.code || '';
+      if (code.includes('popup-blocked') || code.includes('popup-closed')) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        setLoginError(`Google login failed (${code || 'unknown error'}). Make sure the owner Google email is authorized in Firebase.`);
+      }
     }
   };
 
@@ -342,7 +352,7 @@ export function Admin() {
     );
   }
 
-  if (!ADMIN_EMAILS.includes(user.email || '')) {
+  if (!authorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
         <div className="bg-white p-8 rounded-xl shadow border border-red-200 text-center max-w-md">
