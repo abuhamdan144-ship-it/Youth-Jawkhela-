@@ -115,7 +115,7 @@ export function Donate() {
             <div className="p-6 space-y-4">
               <div className="border-b border-gray-100 pb-4">
                 <p className="text-sm text-gray-500 mb-1">Account Title</p>
-                <p className="font-semibold text-gray-900 text-lg">Azizul Haq</p>
+                <p className="font-semibold text-gray-900 text-lg">Aziz Ul Haq</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Mobile Number</p>

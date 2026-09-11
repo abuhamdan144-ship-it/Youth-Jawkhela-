@@ -92,7 +92,7 @@ export function Home() {
                   <span className="font-semibold text-gray-800">Easypaisa</span>
                 </div>
                 <div className="space-y-1 mb-3 text-sm text-gray-600">
-                  <p>Title: <span className="font-medium text-gray-900">Azizul Haq</span></p>
+                  <p>Title: <span className="font-medium text-gray-900">Aziz Ul Haq</span></p>
                   <p className="font-mono text-lg font-bold text-gray-900 text-center py-2">0342-9395868</p>
                 </div>
                 <button 
