@@ -166,6 +166,18 @@ export function Admin() {
     return () => unsubscribe();
   }, []);
 
+  const downloadCsv = (filename: string, rows: any[]) => {
+    if (!rows.length) { alert('No records available to download.'); return; }
+    const keys = Array.from(new Set(rows.flatMap(row => Object.keys(row))));
+    const clean = (value: any) => { if (value && typeof value === 'object' && value.toDate) return value.toDate().toISOString(); if (value && typeof value === 'object') return JSON.stringify(value); return String(value ?? '').replace(/"/g, '""'); };
+    const csv = [keys.join(','), ...rows.map(row => keys.map(key => `"${clean(row[key])}"`).join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url);
+  };
+  const downloadAllMembers = () => downloadCsv('zwanan-jawkhela-registered-members.csv', [...activeMembers, ...pendingMembers]);
+  const downloadBloodReport = () => { const all = [...activeMembers, ...pendingMembers]; const counts = all.reduce((map: Record<string, number>, member) => { const group = member.bloodGroup || member.bloodType || 'Not provided'; map[group] = (map[group] || 0) + 1; return map; }, {}); downloadCsv('zwanan-jawkhela-blood-group-report.csv', Object.entries(counts).map(([bloodGroup, total]) => ({ bloodGroup, total }))); };
+  const downloadOverseasRecords = () => downloadCsv('zwanan-jawkhela-overseas-members.csv', overseas);
+  const downloadDonationRecords = () => downloadCsv('zwanan-jawkhela-donations.csv', donations);
+
   const fetchAdsAndBlood = async () => {
     try {
       const bq = query(collection(db, 'bloodDonation'), orderBy('createdAt', 'desc'));
@@ -812,6 +824,7 @@ export function Admin() {
                   </MetalButton>
                 </div>
               </section>
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"><div className="mb-4"><span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Management records</span><h2 className="mt-1 text-2xl font-bold text-gray-900">Download full reports</h2><p className="mt-1 text-sm text-gray-500">Export current records as CSV files for management and backup.</p></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"><button onClick={downloadAllMembers} className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">Download registered members ({activeMembers.length + pendingMembers.length})</button><button onClick={downloadBloodReport} className="rounded-lg bg-rose-700 px-4 py-3 text-sm font-bold text-white hover:bg-rose-800">Download blood-group report</button><button onClick={downloadOverseasRecords} className="rounded-lg bg-indigo-700 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-800">Download overseas records ({overseas.length})</button><button onClick={downloadDonationRecords} className="rounded-lg bg-amber-600 px-4 py-3 text-sm font-bold text-white hover:bg-amber-700">Download donations ({donations.length})</button></div></section>
             </div>
           )}
 
