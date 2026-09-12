@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimest
 import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import * as XLSX from 'xlsx';
 import { MetalButton } from './ui/metal-button';
 
 // Simplified for MVP. We check if the logged in email is the admin.
@@ -173,7 +174,12 @@ export function Admin() {
     const csv = [keys.join(','), ...rows.map(row => keys.map(key => `"${clean(row[key])}"`).join(','))].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url);
   };
-  const downloadAllMembers = () => downloadCsv('zwanan-jawkhela-registered-members.csv', [...activeMembers, ...pendingMembers]);
+  const downloadExcel = (filename: string, rows: any[]) => { if (!rows.length) { alert('No records available to download.'); return; } const sheet = XLSX.utils.json_to_sheet(rows); const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, sheet, 'Records'); XLSX.writeFile(book, filename); };
+  const downloadPdf = (title: string, filename: string, rows: any[]) => { if (!rows.length) { alert('No records available to download.'); return; } const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' }); pdf.setFontSize(16); pdf.text(title, 40, 42); pdf.setFontSize(8); let y = 64; rows.forEach((row, index) => { const line = `${index + 1}. ${Object.entries(row).map(([key, value]) => `${key}: ${String(value ?? '').slice(0, 80)}`).join(' | ')}`; const wrapped = pdf.splitTextToSize(line, 750); if (y + wrapped.length * 12 > 550) { pdf.addPage(); y = 42; } pdf.text(wrapped, 40, y); y += wrapped.length * 12 + 5; }); pdf.save(filename); };
+  const exportButtons = (label: string, base: string, rows: any[]) => <div className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-bold text-gray-800 mb-2">{label}</p><div className="flex flex-wrap gap-2"><button onClick={() => downloadCsv(`${base}.csv`, rows)} className="rounded bg-slate-700 px-3 py-2 text-xs font-bold text-white">CSV</button><button onClick={() => downloadExcel(`${base}.xlsx`, rows)} className="rounded bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Excel</button><button onClick={() => downloadPdf(label, `${base}.pdf`, rows)} className="rounded bg-rose-700 px-3 py-2 text-xs font-bold text-white">PDF</button></div></div>;
+  const allMembers = [...activeMembers, ...pendingMembers];
+  const bloodReport = Object.entries(allMembers.reduce((map: Record<string, number>, member) => { const group = member.bloodGroup || member.bloodType || 'Not provided'; map[group] = (map[group] || 0) + 1; return map; }, {})).map(([bloodGroup, total]) => ({ bloodGroup, total }));
+  const downloadAllMembers = () => downloadCsv('zwanan-jawkhela-registered-members.csv', allMembers);
   const downloadBloodReport = () => { const all = [...activeMembers, ...pendingMembers]; const counts = all.reduce((map: Record<string, number>, member) => { const group = member.bloodGroup || member.bloodType || 'Not provided'; map[group] = (map[group] || 0) + 1; return map; }, {}); downloadCsv('zwanan-jawkhela-blood-group-report.csv', Object.entries(counts).map(([bloodGroup, total]) => ({ bloodGroup, total }))); };
   const downloadOverseasRecords = () => downloadCsv('zwanan-jawkhela-overseas-members.csv', overseas);
   const downloadDonationRecords = () => downloadCsv('zwanan-jawkhela-donations.csv', donations);
@@ -824,7 +830,7 @@ export function Admin() {
                   </MetalButton>
                 </div>
               </section>
-              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"><div className="mb-4"><span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Management records</span><h2 className="mt-1 text-2xl font-bold text-gray-900">Download full reports</h2><p className="mt-1 text-sm text-gray-500">Export current records as CSV files for management and backup.</p></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"><button onClick={downloadAllMembers} className="rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">Download registered members ({activeMembers.length + pendingMembers.length})</button><button onClick={downloadBloodReport} className="rounded-lg bg-rose-700 px-4 py-3 text-sm font-bold text-white hover:bg-rose-800">Download blood-group report</button><button onClick={downloadOverseasRecords} className="rounded-lg bg-indigo-700 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-800">Download overseas records ({overseas.length})</button><button onClick={downloadDonationRecords} className="rounded-lg bg-amber-600 px-4 py-3 text-sm font-bold text-white hover:bg-amber-700">Download donations ({donations.length})</button></div></section>
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"><div className="mb-4"><span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Management records</span><h2 className="mt-1 text-2xl font-bold text-gray-900">Download full reports</h2><p className="mt-1 text-sm text-gray-500">Export each management record as CSV, Excel, or PDF.</p></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{exportButtons(`Registered members (${allMembers.length})`, `zwanan-jawkhela-registered-members`, allMembers)}{exportButtons("Blood-group report", "zwanan-jawkhela-blood-group-report", bloodReport)}{exportButtons(`Overseas members (${overseas.length})`, "zwanan-jawkhela-overseas-members", overseas)}{exportButtons(`Donations (${donations.length})`, "zwanan-jawkhela-donations", donations)}</div></section>
             </div>
           )}
 
