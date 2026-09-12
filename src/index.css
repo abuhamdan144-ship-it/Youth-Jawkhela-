@@ -110,3 +110,6 @@ body{background:var(--cyber-bg);color:var(--cyber-text)}.site-shell{background:r
 .membership-card-pair--id3d .membership-card__qr{background:#f5c873;color:#111c2a;border-radius:7px;padding:5px;box-shadow:0 2px 5px #0004}
 .membership-card-pair--id3d .membership-card--back{background:linear-gradient(135deg,#f5f9f4,#dcefe2 58%,#b9d9c6);color:#10251e}
 .membership-card-pair--id3d .membership-card--back .membership-card__brand strong,.membership-card-pair--id3d .membership-card--back .membership-card__brand small{color:#10251e}
+
+/* Approved Gemini concept preview */
+.gemini-card-preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-bottom:42px}.gemini-card-preview img{display:block;width:100%;border-radius:20px;box-shadow:0 22px 38px #06151d35;border:1px solid #d4a928;background:#fff}.gemini-card-preview h2{font:800 16px Manrope;color:#18252b;margin:16px 0 0}@media(max-width:760px){.gemini-card-preview{grid-template-columns:1fr}}
