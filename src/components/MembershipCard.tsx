@@ -41,33 +41,51 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
         )}
       </div>
 
+      {/* Blank Patch to cover "Shaukat Khan Yousaf" floating text */}
+      <div style={{ position: 'absolute', left: '260px', top: '223px', width: '530px', height: '40px', background: 'white', zIndex: 0 }}></div>
+
       {/* Name Patch */}
-      <div style={{ position: 'absolute', left: '315px', top: '223px', width: '480px', height: '38px', background: 'transparent', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
+      <div style={{ position: 'absolute', left: '315px', top: '223px', width: '480px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
         <span style={{ fontSize: '24px', fontWeight: 900, color: '#000000', textTransform: 'uppercase' }}>{name}</span>
       </div>
 
+      {/* Blank Patch to cover "ZJ-2026-247" floating text */}
+      <div style={{ position: 'absolute', left: '260px', top: '272px', width: '530px', height: '40px', background: 'white', zIndex: 0 }}></div>
+
       {/* Card No Patch */}
-      <div style={{ position: 'absolute', left: '315px', top: '272px', width: '480px', height: '38px', background: 'transparent', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
+      <div style={{ position: 'absolute', left: '315px', top: '272px', width: '480px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
         <span style={{ fontSize: '20px', fontWeight: 900, color: '#000000' }}>{cardNo}</span>
       </div>
 
+      {/* Blank Patch to cover "O+" floating text */}
+      <div style={{ position: 'absolute', left: '260px', top: '352px', width: '255px', height: '40px', background: 'white', zIndex: 0 }}></div>
+
       {/* Blood Group Patch */}
-      <div style={{ position: 'absolute', left: '315px', top: '352px', width: '200px', height: '38px', background: 'transparent', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
+      <div style={{ position: 'absolute', left: '315px', top: '352px', width: '200px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
         <span style={{ fontSize: '22px', fontWeight: 900, color: '#000000' }}>{blood}</span>
       </div>
 
+      {/* Blank Patch to cover "Jawkhela" floating text */}
+      <div style={{ position: 'absolute', left: '570px', top: '352px', width: '225px', height: '40px', background: 'white', zIndex: 0 }}></div>
+
       {/* Village Patch */}
-      <div style={{ position: 'absolute', left: '575px', top: '352px', width: '220px', height: '38px', background: 'transparent', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
+      <div style={{ position: 'absolute', left: '575px', top: '352px', width: '220px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
         <span style={{ fontSize: '20px', fontWeight: 900, color: '#000000' }}>{village}</span>
       </div>
+
+      {/* Blank Patch to cover the duplicated "O+ Jawkhela" on the bottom line */}
+      <div style={{ position: 'absolute', left: '260px', top: '415px', width: '430px', height: '40px', background: 'white', zIndex: 1 }}></div>
 
     </div>
   );
 
   const renderBack = () => (
     <div style={{ position: 'relative', width: '1011px', height: '638px', background: '#fff url(/member-card-gemini-back.png) center/cover no-repeat', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
+      {/* Blank Patch to cover "94885489" floating text */}
+      <div style={{ position: 'absolute', left: '260px', top: '610px', width: '130px', height: '24px', background: 'white', zIndex: 0 }}></div>
+
       {/* Phone Patch */}
-      <div style={{ position: 'absolute', left: '625px', top: '596px', width: '250px', height: '24px', background: 'transparent', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', left: '625px', top: '596px', width: '250px', height: '24px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center' }}>
         <span style={{ fontSize: '15px', fontWeight: 900, color: '#000000' }}>{phone}</span>
       </div>
     </div>
