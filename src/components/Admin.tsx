@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { MetalButton } from './ui/metal-button';
@@ -124,6 +124,7 @@ export function Admin() {
   const [ads, setAds] = useState<any[]>([]);
   const [bloodRequests, setBloodRequests] = useState<any[]>([]);
   const [overseas, setOverseas] = useState<any[]>([]);
+  const [candidates, setCandidates] = useState<any[]>([]);
   
   // Form states
   const [newCabinetForm, setNewCabinetForm] = useState({ name: '', position: 'President', startDate: '', endDate: '', responsibilities: '' });
@@ -133,6 +134,8 @@ export function Admin() {
   const [newEventForm, setNewEventForm] = useState({ title: '', type: 'General', date: '', time: '', location: '', description: '' });
   const [newAdForm, setNewAdForm] = useState({ title: '', businessName: '', cta: '', description: '', imageUrl: '', durationDays: '30' });
   const [adImage, setAdImage] = useState<File | null>(null);
+  const [candidateImage, setCandidateImage] = useState<File | null>(null);
+  const [newCandidateForm, setNewCandidateForm] = useState({ fullName: '', position: 'President', votingStart: '', votingEnd: '', bio: '', phone: '', photoUrl: '' });
 
   const [newMemberForm, setNewMemberForm] = useState({ fullName: '', phone: '', cnic: '', bloodGroup: 'O+', village: 'Jawkhela' });
   const [newDonationForm, setNewDonationForm] = useState({ donorName: '', amount: '', date: '', purpose: '' });
@@ -156,6 +159,7 @@ export function Admin() {
         fetchNewsAndEvents();
         fetchAdsAndBlood();
         fetchDonations();
+        fetchCandidates();
       }
     });
 
@@ -341,6 +345,11 @@ export function Admin() {
   };
 
   
+  const fetchCandidates = async () => { try { const snap = await getDocs(query(collection(db, 'candidates'), orderBy('createdAt', 'desc'))); setCandidates(snap.docs.map(d => ({ id: d.id, ...d.data() }))); } catch { try { const snap = await getDocs(collection(db, 'candidates')); setCandidates(snap.docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { console.error(e); } } };
+  const handleAddCandidate = async (e: React.FormEvent) => { e.preventDefault(); try { let photoUrl = newCandidateForm.photoUrl; if (candidateImage) photoUrl = await imageFileToDataUrl(candidateImage); await addDoc(collection(db, 'candidates'), withoutUndefined({ ...newCandidateForm, photoUrl, createdAt: serverTimestamp(), status: 'Active' })); setNewCandidateForm({ fullName: '', position: 'President', votingStart: '', votingEnd: '', bio: '', phone: '', photoUrl: '' }); setCandidateImage(null); fetchCandidates(); alert('Candidate added successfully.'); } catch(e:any) { alert(e.message || 'Failed to add candidate.'); } };
+  const editCandidate = async (candidate: any) => { const fullName = prompt('Full name', candidate.fullName || ''); if (!fullName) return; const position = prompt('Position', candidate.position || 'President') || candidate.position; const bio = prompt('Full details / bio', candidate.bio || '') ?? (candidate.bio || ''); try { await updateDoc(doc(db, 'candidates', candidate.id), { fullName, position, bio }); fetchCandidates(); } catch(e:any) { alert(e.message); } };
+  const deleteCandidate = async (id: string) => { if (!confirm('Delete this candidate?')) return; try { await deleteDoc(doc(db, 'candidates', id)); fetchCandidates(); } catch(e:any) { alert(e.message); } };
+
   const fetchDonations = async () => {
     try {
       const q = query(collection(db, 'donations'), orderBy('createdAt', 'desc'));
@@ -720,6 +729,7 @@ export function Admin() {
           >
             <Newspaper size={20} /> Announcements
           </button>
+          <button onClick={() => selectTab('voting')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'voting' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}><Vote size={20} /> Voting System</button>
           <button 
             onClick={() => selectTab('ads')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'ads' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
@@ -1362,6 +1372,7 @@ export function Admin() {
             </div>
           )}
 
+          {activeTab === 'voting' && (<div className="space-y-6"><div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Add election candidate</h3><form onSubmit={handleAddCandidate} className="grid grid-cols-1 md:grid-cols-2 gap-4"><input required placeholder="Candidate full name" value={newCandidateForm.fullName} onChange={e=>setNewCandidateForm({...newCandidateForm,fullName:e.target.value})} className="border rounded-lg px-4 py-2" /><select value={newCandidateForm.position} onChange={e=>setNewCandidateForm({...newCandidateForm,position:e.target.value})} className="border rounded-lg px-4 py-2"><option>President</option><option>Vice President</option><option>General Secretary</option><option>Treasurer</option><option>Welfare Secretary</option><option>Youth Coordinator</option></select><label className="text-sm text-gray-600">Voting start<input required type="datetime-local" value={newCandidateForm.votingStart} onChange={e=>setNewCandidateForm({...newCandidateForm,votingStart:e.target.value})} className="block w-full border rounded-lg px-4 py-2 mt-1" /></label><label className="text-sm text-gray-600">Voting end<input required type="datetime-local" value={newCandidateForm.votingEnd} onChange={e=>setNewCandidateForm({...newCandidateForm,votingEnd:e.target.value})} className="block w-full border rounded-lg px-4 py-2 mt-1" /></label><input placeholder="Phone / contact" value={newCandidateForm.phone} onChange={e=>setNewCandidateForm({...newCandidateForm,phone:e.target.value})} className="border rounded-lg px-4 py-2" /><label className="text-sm text-gray-600">Candidate photo<input type="file" accept="image/*" onChange={e=>setCandidateImage(e.target.files?.[0] || null)} className="block w-full border rounded-lg px-4 py-2 mt-1" /></label><textarea placeholder="Full details, bio, manifesto" value={newCandidateForm.bio} onChange={e=>setNewCandidateForm({...newCandidateForm,bio:e.target.value})} className="md:col-span-2 border rounded-lg px-4 py-2" rows={4} /><button type="submit" className="md:col-span-2 bg-primary text-white px-6 py-3 rounded-lg font-bold">Submit candidate</button></form></div><div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"><h3 className="text-lg font-semibold text-gray-800 mb-4">Candidates and voting schedule</h3><div className="grid gap-3">{candidates.map(c=><div key={c.id} className="flex flex-wrap items-center gap-4 border rounded-lg p-3">{c.photoUrl ? <img src={c.photoUrl} className="w-14 h-14 rounded-full object-cover" /> : <div className="w-14 h-14 rounded-full bg-green-100 grid place-items-center font-bold">{(c.fullName||'C').slice(0,2).toUpperCase()}</div>}<div className="flex-1 min-w-[180px]"><b>{c.fullName}</b><p className="text-sm text-gray-500">{c.position} · {c.votingStart} to {c.votingEnd}</p><p className="text-sm text-gray-600">{c.bio}</p></div><button onClick={()=>editCandidate(c)} className="bg-blue-100 text-blue-700 px-3 py-2 rounded">Edit</button><button onClick={()=>deleteCandidate(c.id)} className="bg-red-100 text-red-700 px-3 py-2 rounded">Delete</button></div>)}{!candidates.length&&<p className="text-gray-500">No candidates added yet.</p>}</div></div></div>)}
           {activeTab === 'ads' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

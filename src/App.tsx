@@ -17,7 +17,7 @@ const sections = [
   { key: 'announcements', title: 'Announcements & Takaar', description: 'Important notices and community updates.', icon: Megaphone, path: '/announcements', tone: 'amber' },
   { key: 'cabinet', title: 'Cabinet Members', description: 'Meet the elected leadership serving the community.', icon: Landmark, path: '/cabinet', tone: 'blue' },
   { key: 'cabinetMeetings', title: 'Cabinet Meeting Summaries', description: 'Transparent records of decisions and progress.', icon: CalendarDays, path: '/meetings', tone: 'violet' },
-  { key: 'elections', title: 'Elections & Voting System', description: 'Participate in the future of our organization.', icon: Vote, path: '/elections', tone: 'cyan' },
+  { key: 'candidates', title: 'Elections & Voting System', description: 'Participate in the future of our organization.', icon: Vote, path: '/elections', tone: 'cyan' },
   { key: 'dailyTasks', title: 'Daily Tasks With Images', description: 'See the work happening every day on the ground.', icon: Images, path: '/daily-tasks', tone: 'orange' },
   { key: 'campaigns', title: 'Awareness Campaigns', description: 'Learn, share, and help build a stronger society.', icon: Sparkles, path: '/campaigns', tone: 'green' },
   { key: 'overseasRegistration', title: 'Overseas Pakistanis Registration', description: 'Stay connected wherever life takes you.', icon: Globe2, path: '/overseas-registration', tone: 'indigo' },
