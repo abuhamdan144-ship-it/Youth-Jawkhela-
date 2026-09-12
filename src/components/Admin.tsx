@@ -687,7 +687,7 @@ export function Admin() {
 
   const selectTab = (tab: string) => { setActiveTab(tab); setSidebarOpen(false); };
   return (
-    <div className="flex min-h-screen min-w-0 bg-gray-100">
+    <div className="admin-dashboard flex min-h-screen min-w-0 bg-gray-100">
       {sidebarOpen && <button aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-20 bg-black/40 lg:hidden" />}
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-accent text-white shadow-xl flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
