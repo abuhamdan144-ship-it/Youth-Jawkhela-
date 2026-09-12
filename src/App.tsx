@@ -52,54 +52,24 @@ function App() { return <BrowserRouter><Routes><Route path="*" element={<Site />
 
 function Ticker() {
   const [items, setItems] = useState<RecordItem[]>([]);
-  
+
   useEffect(() => {
     readCollection('announcements').then(setItems);
   }, []);
 
   if (!items.length) return null;
-  
-  const isUrdu = (str: string) => /[\u0600-\u06FF]/.test(str);
-  
-  const urduItems = items.filter(item => isUrdu(text(item, 'title', 'message')) || text(item, 'category') === 'Takaar');
-  const englishItems = items.filter(item => !isUrdu(text(item, 'title', 'message')) && text(item, 'category') !== 'Takaar');
 
-  return (
-    <div className="glass-pipe" style={{ flexDirection: 'column', padding: 0 }}>
-      {urduItems.length > 0 && (
-        <div style={{ width: '100%', overflow: 'hidden', padding: '8px 0', borderBottom: englishItems.length ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-           <div className="ticker-track reverse">
-             {(() => {
-               const trackText = urduItems.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
-               return (
-                 <>
-                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                   <span dir="rtl"><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                 </>
-               )
-             })()}
-           </div>
-        </div>
-      )}
-      {englishItems.length > 0 && (
-        <div style={{ width: '100%', overflow: 'hidden', padding: '8px 0' }}>
-           <div className="ticker-track">
-             {(() => {
-               const trackText = englishItems.slice(0, 5).map(item => text(item, 'title', 'message')).join('  ✦  ');
-               return (
-                 <>
-                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                   <span><Megaphone size={14} className="ticker-icon" /> {trackText}</span>
-                 </>
-               )
-             })()}
-           </div>
-        </div>
-      )}
-    </div>
-  );
+  const announcements = Array.from(new Set(items
+    .map(item => text(item, 'title', 'message'))
+    .map(value => value.replace(/\s+/g, ' ').trim())
+    .filter(Boolean))).slice(0, 6);
+  if (!announcements.length) return null;
+  const trackText = announcements.join('  ✦  ');
+
+  return <div className="takaar-bar" role="region" aria-label="Takaar announcements">
+    <div className="takaar-label"><Megaphone size={14} /> <span>TAKAAR</span></div>
+    <div className="takaar-viewport"><div className="takaar-track" dir="rtl"><span>{trackText}</span><span aria-hidden="true">{trackText}</span></div></div>
+  </div>;
 }
 
 function Site() {
