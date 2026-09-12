@@ -75,3 +75,14 @@ body{background:var(--cyber-bg);color:var(--cyber-text)}.site-shell{background:r
 .cabinet-feature-info h2{font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:-.4px}
 .cabinet-dots{position:relative;margin-top:105px}
 @media(max-width:700px){.cabinet-stage{height:355px}.cabinet-feature-info{top:320px;padding:14px 12px 0}.cabinet-dots{margin-top:92px}.cabinet-feature-info h2{font-size:19px}}
+
+/* Membership card — emerald and gold community identity style */
+.membership-card-pair{gap:24px}
+.membership-card{border:1px solid rgba(218,177,49,.75);border-radius:24px;background:linear-gradient(145deg,#063d34,#075448 62%,#022d27);box-shadow:0 20px 48px rgba(2,39,31,.28)}
+.membership-card--front{overflow:hidden}
+.membership-card__shine{background:radial-gradient(circle at 80% 10%,rgba(243,198,77,.23),transparent 30%),linear-gradient(125deg,transparent 35%,rgba(255,255,255,.06),transparent 65%);opacity:1}
+.membership-card__brand strong{color:#fff8dc}.membership-card__brand small{color:#acd1c5}.membership-card__mark{background:#e7f4e9;border-color:rgba(244,199,71,.8)}
+.membership-card__status{color:#f5ce59}.membership-card__front-body{padding-top:31px}.membership-card__portrait{background:linear-gradient(145deg,#145f50,#062e29);border-color:rgba(243,198,77,.7);border-radius:18px}.membership-card__identity small{color:#b9d2c8}.membership-card__identity h3{color:#fff;font-family:Georgia,'Times New Roman',serif;letter-spacing:-.3px}.membership-card__identity p{color:#f3c74c}.membership-card__qr{color:#123b32;background:#f2cf6b;box-shadow:0 0 20px rgba(243,198,77,.3)}
+.membership-card__details{border-color:rgba(224,190,78,.35)}.membership-card__details span{color:#f3f0da}.membership-card__details b,.membership-card__back-info b{color:#a9c9bd}.membership-card__footer{color:#a7c9be}.membership-card__demo{color:rgba(243,198,77,.75)}
+.membership-card__back{background:linear-gradient(145deg,#063d34,#075448 62%,#022d27)}.membership-card__back-grid{opacity:.28;background-image:linear-gradient(rgba(243,198,77,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(243,198,77,.14) 1px,transparent 1px)}.membership-card__back-rule{background:linear-gradient(90deg,#f3c74c,rgba(243,199,76,0))}.membership-card__back-kicker{color:#f3c74c}.membership-card__back-columns h3{color:#fff8df;font-family:Georgia,'Times New Roman',serif}.membership-card__back-columns p{color:#b8d4ca}.membership-card__back-qr svg{background:#f2cf6b;box-shadow:0 0 20px rgba(243,198,77,.3)}.membership-card__back-qr b{color:#f3c74c}.membership-card__back-info{border-color:rgba(224,190,78,.3);color:#e2efdf}.membership-card__back-footer{color:#a7c9be}
+@media(max-width:540px){.membership-card{border-radius:20px}.membership-card__identity h3{font-size:18px}}
