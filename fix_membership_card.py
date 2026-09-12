@@ -1,4 +1,9 @@
-import React from 'react';
+import re
+
+with open('src/components/MembershipCard.tsx', 'r') as f:
+    content = f.read()
+
+new_content = """import React from 'react';
 
 export interface MembershipCardData {
   fullName?: string;
@@ -43,22 +48,22 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
 
       {/* Name Patch */}
       <div style={{ position: 'absolute', left: '315px', top: '223px', width: '480px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 800, color: 'black', textTransform: 'uppercase' }}>{name}</span>
+        <span style={{ fontSize: '24px', fontWeight: 800, color: '#064a35', textTransform: 'uppercase' }}>{name}</span>
       </div>
 
       {/* Card No Patch */}
       <div style={{ position: 'absolute', left: '315px', top: '272px', width: '480px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
-        <span style={{ fontSize: '20px', fontWeight: 800, color: 'black' }}>{cardNo}</span>
+        <span style={{ fontSize: '20px', fontWeight: 800, color: '#064a35' }}>{cardNo}</span>
       </div>
 
       {/* Blood Group Patch */}
       <div style={{ position: 'absolute', left: '315px', top: '352px', width: '200px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
-        <span style={{ fontSize: '22px', fontWeight: 800, color: 'black' }}>{blood}</span>
+        <span style={{ fontSize: '22px', fontWeight: 800, color: '#064a35' }}>{blood}</span>
       </div>
 
       {/* Village Patch */}
       <div style={{ position: 'absolute', left: '575px', top: '352px', width: '220px', height: '38px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center', paddingLeft: '5px' }}>
-        <span style={{ fontSize: '20px', fontWeight: 800, color: 'black' }}>{village}</span>
+        <span style={{ fontSize: '20px', fontWeight: 800, color: '#064a35' }}>{village}</span>
       </div>
 
       {/* Blank Patch to cover "O+ Shaukat Khan" floating text */}
@@ -71,7 +76,7 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
     <div style={{ position: 'relative', width: '1011px', height: '638px', background: '#fff url(/member-card-gemini-back.png) center/cover no-repeat', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
       {/* Phone Patch */}
       <div style={{ position: 'absolute', left: '625px', top: '596px', width: '250px', height: '24px', background: 'white', zIndex: 1, display: 'flex', alignItems: 'center' }}>
-        <span style={{ fontSize: '15px', fontWeight: 800, color: 'black' }}>{phone}</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: '#064a35' }}>{phone}</span>
       </div>
     </div>
   );
@@ -98,3 +103,7 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
 }
 
 export default MembershipCard;
+"""
+
+with open('src/components/MembershipCard.tsx', 'w') as f:
+    f.write(new_content)
