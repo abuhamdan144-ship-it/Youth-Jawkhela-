@@ -5,6 +5,7 @@ import { Upload, FileText, Download, CheckCircle, ChevronLeft } from 'lucide-rea
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Link } from 'react-router-dom';
+import { MembershipCard } from './MembershipCard';
 
 export function MembershipPage() {
   const [form, setForm] = useState({
@@ -189,53 +190,7 @@ export function MembershipPage() {
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Card Preview</h2>
             <div className="overflow-x-auto pb-4">
-              <div id="membership-card-preview" className="relative w-[600px] h-[350px] rounded-2xl overflow-hidden shadow-2xl flex" style={{ background: 'linear-gradient(135deg, #0b6e61 0%, #071f2a 100%)', color: 'white' }}>
-                <div className="w-[180px] bg-black/20 p-6 flex flex-col items-center justify-center text-center border-r border-white/10">
-                  <div className="w-24 h-24 bg-white/10 rounded-full overflow-hidden mb-4 border-4 border-white/20">
-                    {(memberData?.profileImageUrl || profileImage) ? (
-                      <img src={memberData?.profileImageUrl || profileImage} className="w-full h-full object-cover" alt="Profile" crossOrigin="anonymous" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white/50 text-4xl">👤</div>
-                    )}
-                  </div>
-                  <h3 className="font-bold text-lg mb-1">{memberData?.bloodGroup || form.bloodGroup || 'O+'}</h3>
-                  <span className="text-[10px] uppercase tracking-wider text-green-300">Blood Group</span>
-                </div>
-                <div className="flex-1 p-8 flex flex-col justify-between relative">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-bl-full -z-0"></div>
-                  
-                  <div className="relative z-10 flex justify-between items-start">
-                    <div>
-                      <h2 className="text-2xl font-black tracking-tight text-[#f4ca73]">Zwanan Jawkhela</h2>
-                      <p className="text-xs tracking-widest text-green-100 uppercase mt-1">Official Member</p>
-                    </div>
-                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center font-black text-xl">ZJ</div>
-                  </div>
-
-                  <div className="relative z-10 grid grid-cols-2 gap-6 mt-8">
-                    <div>
-                      <p className="text-[10px] text-green-300 uppercase tracking-widest mb-1">Name</p>
-                      <p className="font-bold text-xl">{memberData?.fullName || form.fullName || 'YOUR NAME'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-green-300 uppercase tracking-widest mb-1">CNIC</p>
-                      <p className="font-mono">{memberData?.cnic || form.cnic || '00000-0000000-0'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-green-300 uppercase tracking-widest mb-1">Card Number</p>
-                      <p className="font-mono text-[#f4ca73]">{memberData?.cardNumber || 'PENDING'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-green-300 uppercase tracking-widest mb-1">Village</p>
-                      <p className="font-medium">{memberData?.village || form.village || 'Location'}</p>
-                    </div>
-                  </div>
-
-                  <div className="relative z-10 mt-6 pt-4 border-t border-white/20 text-[9px] text-white/60">
-                    If found, please return to Zwanan Jawkhela welfare administration.
-                  </div>
-                </div>
-              </div>
+              <div id="membership-card-preview" className="membership-page-card-preview"><MembershipCard member={{ fullName: memberData?.fullName || form.fullName || 'YOUR NAME', cardNumber: memberData?.cardNumber || 'PENDING', bloodGroup: memberData?.bloodGroup || form.bloodGroup, cnic: memberData?.cnic || form.cnic || '00000-0000000-0', village: memberData?.village || form.village || 'Location', phone: memberData?.phone || form.phone || '+92 Community Helpline', issueDate: memberData?.issueDate || '2026', expiryDate: memberData?.expiryDate || '30 Sep 2027', profileImageUrl: memberData?.profileImageUrl || profileImage }} variant="emerald" /></div>
             </div>
             
             {(memberData?.status === 'Approved') && (
