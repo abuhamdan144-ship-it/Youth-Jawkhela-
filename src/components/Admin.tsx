@@ -492,32 +492,28 @@ export function Admin() {
   };
 
   const generatePDFCard = async (member: any) => {
-    const cardElement = document.createElement('div');
     const name = member.fullName || member.name || 'Community Member';
+    const cardNo = member.cardNumber || member.membershipNumber || 'ZJ-2026-000';
     const initials = name.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase();
-    const expiry = member.expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    cardElement.style.cssText = 'width:900px;height:568px;position:absolute;left:-9999px;color:white;padding:42px;background:linear-gradient(135deg,#075448,#0b806d 58%,#55c69c);font-family:Arial,sans-serif;border-radius:28px;overflow:hidden;box-sizing:border-box;';
-    cardElement.innerHTML = `
-      <div style="position:absolute;inset:-240px 35% 80% -25%;background:linear-gradient(125deg,transparent 34%,rgba(255,255,255,.16) 35%,rgba(255,255,255,.02) 52%,transparent 53%);transform:rotate(12deg)"></div>
-      <div style="position:relative;display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;align-items:center;gap:16px"><img src="/zj-logo-emerald.png" crossorigin="anonymous" style="width:58px;height:58px;object-fit:contain;border-radius:16px;background:white" /><div><div style="font-size:24px;font-weight:800">Zwanan Jawkhela</div><div style="font-size:12px;opacity:.75;margin-top:4px">YOUTH WELFARE COMMUNITY</div></div></div>
-        <div style="font-size:12px;font-weight:800;letter-spacing:2px;color:#c8f5d9">✓ VERIFIED MEMBER</div>
-      </div>
-      <div style="position:relative;display:flex;align-items:center;gap:22px;margin-top:72px">
-        <div style="width:116px;height:140px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:42px;font-weight:800">${member.profileImageUrl ? `<img src="${member.profileImageUrl}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover" />` : initials}</div>
-        <div style="flex:1"><div style="font-size:11px;letter-spacing:2px;opacity:.7">OFFICIAL MEMBER</div><div style="font-size:36px;font-weight:800;margin:12px 0 8px">${name}</div><div style="font-size:18px;color:#f5c873;font-weight:700;letter-spacing:1px">${member.cardNumber || member.membershipNumber || 'ZJ-2026-000'}</div></div>
-        <div style="width:82px;height:82px;border:3px solid rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:2px">SCAN</div>
-      </div>
-      <div style="position:relative;display:flex;gap:48px;border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25);margin-top:46px;padding:18px 0"><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">BLOOD GROUP</small><b style="font-size:17px">${member.bloodGroup || member.bloodType || '—'}</b></div><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">VILLAGE</small><b style="font-size:17px">${member.village || 'Jawkhela'}</b></div><div><small style="display:block;font-size:10px;letter-spacing:1px;opacity:.65">VALID THROUGH</small><b style="font-size:17px">${expiry}</b></div></div>
-      <div style="position:relative;display:flex;justify-content:space-between;margin-top:22px;font-size:11px;opacity:.75"><span>Jawkhela, Pakistan</span><span>Community service card</span></div>`;
-    document.body.appendChild(cardElement);
+    const expiry = member.expiryDate || 'Valid for lifetime';
+    const makeCard = (side: 'front' | 'back') => {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:1011px;height:638px;position:absolute;left:-9999px;font-family:Arial,sans-serif;overflow:hidden;box-sizing:border-box;border-radius:28px;';
+      const common = 'position:absolute;box-sizing:border-box;';
+      if (side === 'front') {
+        el.style.background = 'linear-gradient(135deg,#ffffff 0%,#ffffff 57%,#083d2d 57.2%,#083d2d 100%)';
+        el.innerHTML = `<div style="${common}inset:0;border:5px solid #d4a928;border-radius:28px"></div><div style="${common}top:-230px;left:-130px;width:630px;height:450px;background:#083d2d;border-radius:0 0 100% 0;border-right:8px solid #d4a928;border-bottom:8px solid #d4a928"></div><div style="${common}right:-180px;bottom:-210px;width:680px;height:420px;background:#083d2d;border-radius:100% 0 0 0;border-left:8px solid #d4a928;border-top:8px solid #d4a928"></div><img src="/zj-logo-emerald.png" crossorigin="anonymous" style="${common}right:190px;top:48px;width:135px;height:135px;object-fit:contain;background:white;border-radius:14px"/><div style="${common}right:50px;top:195px;width:410px;text-align:center;color:#083d2d"><b style="font-size:33px;letter-spacing:2px">ZWANAN <span style="color:#c92f2f">JAWKHELA</span></b><div style="margin-top:10px;font-size:14px;letter-spacing:5px;color:#b78b1e">YOUTH WELFARE COMMUNITY</div></div><div style="${common}left:63px;top:105px;width:240px;height:300px;border:8px solid #d4a928;border-radius:24px;background:#bdd3c7;display:flex;align-items:center;justify-content:center;color:#083d2d;font-size:52px;font-weight:bold;overflow:hidden">${member.profileImageUrl ? `<img src="${member.profileImageUrl}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover"/>` : initials}</div><div style="${common}left:63px;bottom:58px;color:#083d2d"><b style="display:block;font-size:28px">${name.toUpperCase()}</b><b style="display:block;font-family:Georgia;color:#b78b1e;font-size:22px;margin-top:12px">${cardNo}</b><span style="display:block;font-size:16px;margin-top:8px">Jawkhela Community Member</span></div><div style="${common}right:75px;bottom:55px;color:#fff;text-align:center;font-size:26px;font-weight:bold">APPROVED MEMBER<div style="color:#edc54d;font-size:16px;margin-top:10px">${expiry}</div></div>`;
+      } else {
+        el.style.background = '#fff';
+        el.innerHTML = `<div style="${common}inset:0;border:5px solid #d4a928;border-radius:28px"></div><div style="${common}top:0;left:0;right:0;height:125px;background:#083d2d;color:#e8bd42;text-align:center;padding-top:40px;font-weight:bold;font-size:24px;letter-spacing:3px">✦ STRONGER TOGETHER, BETTER TOMORROW ✦</div><h2 style="${common}top:160px;left:0;right:0;text-align:center;color:#083d2d;font-size:31px;letter-spacing:2px">— MEMBER BENEFITS —</h2><div style="${common}top:245px;left:80px;right:80px;display:flex;justify-content:space-between;text-align:center;color:#111"><div style="font-size:42px">🤝<b style="display:block;font-size:17px;margin-top:16px">COMMUNITY<br/>NETWORKING</b></div><div style="font-size:42px">♥<b style="display:block;font-size:17px;margin-top:16px">SOCIAL<br/>SUPPORT</b></div><div style="font-size:42px">🎓<b style="display:block;font-size:17px;margin-top:16px">EDUCATIONAL<br/>RESOURCES</b></div><div style="font-size:42px">🛡<b style="display:block;font-size:17px;margin-top:16px">ADVOCACY &<br/>WELFARE</b></div></div><div style="${common}left:80px;right:80px;bottom:95px;border-top:3px solid #d4a928;padding-top:18px;display:flex;justify-content:space-between;color:#083d2d;font-size:14px;line-height:1.7"><span>🌐 jawkhela-youth.vercel.app<br/>✉ info@jawkhela-youth.vercel.app<br/>📍 Jawkhela, Pakistan</span><span><b>COMMUNITY HELPLINE</b><br/>Admin: +92 Community Helpline<br/>Welfare: +92 Community Support</span><strong style="border:4px solid #083d2d;padding:16px;text-align:center;font-size:18px">QR<br/>SCAN</strong></div><div style="${common}bottom:0;left:0;right:0;height:65px;background:#083d2d;color:#e8bd42;text-align:center;padding-top:22px;font-weight:bold;font-size:20px;letter-spacing:3px">UNITY · RESPECT · CULTURE · SERVICE</div>`;
+      }
+      document.body.appendChild(el); return el;
+    };
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 638] });
     try {
-      const canvas = await html2canvas(cardElement, { scale: 2, useCORS: true, backgroundColor: null });
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [900, 568] });
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 900, 568);
-      pdf.save(`ZJ_Emerald_Card_${name.replace(/\s+/g, '_')}.pdf`);
-    } catch (error) { console.error('Error generating PDF card:', error); alert('Failed to generate PDF card.'); }
-    finally { document.body.removeChild(cardElement); }
+      for (const side of ['front', 'back'] as const) { const el = makeCard(side); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: null }); if (side === 'back') pdf.addPage([1011, 638], 'landscape'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 638); document.body.removeChild(el); }
+      pdf.save(`ZJ_Private_Member_ID_${name.replace(/\s+/g, '_')}.pdf`);
+    } catch (error) { console.error('Error generating two-sided PDF card:', error); alert('Failed to generate the two-sided membership card.'); }
   };
 
   const initiateWhatsApp = (phone: string, name: string) => {
