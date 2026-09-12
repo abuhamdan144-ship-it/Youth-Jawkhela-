@@ -123,39 +123,39 @@ export function MembershipPage() {
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-                    <input required value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                    <input required value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Father's Name</label>
-                    <input required value={form.fatherName} onChange={e => setForm({...form, fatherName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                    <input required value={form.fatherName} onChange={e => setForm({...form, fatherName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">CNIC</label>
-                    <input required value={form.cnic} onChange={e => setForm({...form, cnic: e.target.value})} placeholder="XXXXX-XXXXXXX-X" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                    <input required value={form.cnic} onChange={e => setForm({...form, cnic: e.target.value})} placeholder="XXXXX-XXXXXXX-X" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Phone</label>
-                    <input required value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                    <input required value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Address / Village</label>
-                  <input required value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="Full address" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none mb-2" />
-                  <input required value={form.village} onChange={e => setForm({...form, village: e.target.value})} placeholder="Village name" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                  <input required value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="Full address" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold mb-2" />
+                  <input required value={form.village} onChange={e => setForm({...form, village: e.target.value})} placeholder="Village name" className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Age</label>
-                    <input type="number" required value={form.age} onChange={e => setForm({...form, age: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+                    <input type="number" required value={form.age} onChange={e => setForm({...form, age: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Blood Group</label>
-                    <select value={form.bloodGroup} onChange={e => setForm({...form, bloodGroup: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none">
+                    <select value={form.bloodGroup} onChange={e => setForm({...form, bloodGroup: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold">
                       {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
                     </select>
                   </div>
@@ -204,7 +204,7 @@ export function MembershipPage() {
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Check Status & Download</h2>
             <form onSubmit={handleCheckStatus} className="flex gap-3 mb-4">
-              <input required value={checkCnic} onChange={e => setCheckCnic(e.target.value)} placeholder="Enter CNIC" className="flex-1 px-4 py-2 border rounded-lg focus:border-green-500 outline-none" />
+              <input required value={checkCnic} onChange={e => setCheckCnic(e.target.value)} placeholder="Enter CNIC" className="flex-1 px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black font-bold" />
               <button type="submit" className="bg-gray-900 text-white px-6 font-bold rounded-lg hover:bg-gray-800">Check</button>
             </form>
             {statusMessage && (

@@ -145,7 +145,7 @@ function FormPage({ type }: { type: string }) {
       <button onClick={() => setSuccess(false)} className="button primary">Submit another</button>
     </div>
   ) : (
-  <form className="community-form" onSubmit={handleSubmit}><div className="form-grid">{fields.map((f) => <label key={f}>{f}<input required value={formData[f] || ''} onChange={(e) => setFormData({...formData, [f]: e.target.value})} placeholder={`Enter ${f.toLowerCase()}`} /></label>)}</div><label>Additional message<textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Tell us anything the team should know" /></label><button disabled={loading} className="button primary" type="submit">{loading ? 'Submitting...' : 'Submit for review'} <ArrowRight size={18} /></button></form>
+  <form className="community-form" onSubmit={handleSubmit}><div className="form-grid">{fields.map((f) => <label key={f}>{f}<input required value={formData[f] || ''} onChange={(e) => setFormData({...formData, [f]: e.target.value})} placeholder={`Enter ${f.toLowerCase()}`} className="text-black font-bold" /></label>)}</div><label>Additional message<textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Tell us anything the team should know" className="text-black font-bold" /></label><button disabled={loading} className="button primary" type="submit">{loading ? 'Submitting...' : 'Submit for review'} <ArrowRight size={18} /></button></form>
   )}
   </div></main>; 
 }
