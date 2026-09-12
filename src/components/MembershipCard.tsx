@@ -29,10 +29,10 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
   const name = member.fullName || 'SHAUKAT KHAN YOUSAF';
   const initials = name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <div className={`membership-card-pair ${variantClasses[variant]}`} aria-label={`${name} two-sided membership card`}>
+    <div className={`membership-card-pair membership-card-pair--id3d ${variantClasses[variant]}`} aria-label={`${name} private community membership card`}>
       <article className="membership-card membership-card--front">
         <div className="membership-card__shine" />
-        <div className="membership-card__topline"><CardBrand /><span className="membership-card__status"><ShieldCheck size={13} /> VERIFIED</span></div>
+        <div className="membership-card__topline"><CardBrand /><span className="membership-card__status"><ShieldCheck size={13} /> PRIVATE MEMBER ID</span></div>
         <div className="membership-card__front-body">
           <div className="membership-card__portrait">{member.profileImageUrl ? <img src={member.profileImageUrl} alt="" /> : <span>{initials}</span>}</div>
           <div className="membership-card__identity"><small>OFFICIAL MEMBER</small><h3>{name}</h3><p>{member.cardNumber || 'ZJ-2026-650'}</p></div>
@@ -53,7 +53,7 @@ export function MembershipCard({ member, variant = 'midnight', demo = false }: {
 
 export function MembershipCardDemo() {
   const member: MembershipCardData = { fullName: 'Shaukat Khan Yousaf', cardNumber: 'ZJ-2026-650', bloodGroup: 'O+', village: 'Jawkhela', cnic: '35202-1234567-1', phone: '+92 300 1234567', issueDate: '12 Sep 2026', expiryDate: '30 Sep 2027' };
-  return <main className="card-demo"><div className="container"><div className="card-demo__heading"><span className="eyebrow">Membership identity system · two-sided</span><h1>Official member card</h1><p>Cyber Glass front and back design with verified identity, member details, QR area, contact information, and community promise.</p></div><div className="card-demo__grid"><div><MembershipCard member={member} variant="midnight" demo /><h2>01 · Cyber Glass official</h2><p>Neon navy identity card with a matching information-rich reverse side.</p></div></div></div></main>;
+  return <main className="card-demo"><div className="container"><div className="card-demo__heading"><span className="eyebrow">Private community membership ID · two-sided</span><h1>Normal 3D member card</h1><p>Clean horizontal plastic ID-card styling with a green national-inspired palette, portrait area, membership number, chip detail, and matching reverse side. This is a private community card, not a government CNIC.</p></div><div className="card-demo__grid"><div><MembershipCard member={member} variant="midnight" demo /><h2>Private Zwanan Jawkhela member ID</h2><p>Pakistan-style horizontal card proportions with a subtle 3D plastic finish and front/back presentation.</p></div></div></div></main>;
 }
 
 export default MembershipCard;

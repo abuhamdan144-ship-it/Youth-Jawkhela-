@@ -100,3 +100,13 @@ body{background:var(--cyber-bg);color:var(--cyber-text)}.site-shell{background:r
 .ads-image-frame{height:auto;min-height:0;display:block;background:transparent;border-radius:20px}
 .ads-image-frame img{width:100%;height:auto;max-width:100%;object-fit:contain;background:transparent}
 @media(max-width:540px){.ads-image-frame{height:auto;min-height:0;border-radius:14px}.ads-image-frame img{height:auto}}
+
+/* Normal Pakistan-style private ID card finish */
+.membership-card-pair--id3d{filter:drop-shadow(0 24px 28px #06151d55)}
+.membership-card-pair--id3d .membership-card{border-radius:16px;box-shadow:inset 0 1px #ffffff55, inset 0 -2px #00000025, 0 8px 18px #020a1280;transform:perspective(1200px) rotateX(1deg);}
+.membership-card-pair--id3d .membership-card--front:after{content:'PRIVATE COMMUNITY ID';position:absolute;right:24px;bottom:18px;font:800 7px Manrope;letter-spacing:1px;color:#f5c873;opacity:.8}
+.membership-card-pair--id3d .membership-card__portrait{border-radius:8px;box-shadow:inset 0 1px #ffffff55,0 3px 8px #0004}
+.membership-card-pair--id3d .membership-card__identity h3{font-family:Arial,sans-serif;letter-spacing:.2px}
+.membership-card-pair--id3d .membership-card__qr{background:#f5c873;color:#111c2a;border-radius:7px;padding:5px;box-shadow:0 2px 5px #0004}
+.membership-card-pair--id3d .membership-card--back{background:linear-gradient(135deg,#f5f9f4,#dcefe2 58%,#b9d9c6);color:#10251e}
+.membership-card-pair--id3d .membership-card--back .membership-card__brand strong,.membership-card-pair--id3d .membership-card--back .membership-card__brand small{color:#10251e}
