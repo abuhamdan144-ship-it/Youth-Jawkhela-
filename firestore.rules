@@ -81,6 +81,11 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    match /votes/{document=**} {
+      allow create: if true;
+      allow read, write: if isAdmin();
+    }
+    
     // Default deny for anything else
     match /{document=**} {
       allow read, write: if isAdmin();
