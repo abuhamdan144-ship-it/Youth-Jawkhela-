@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Printer, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote } from 'lucide-react';
+import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
@@ -526,22 +526,6 @@ export function Admin() {
     } catch(e) { console.error(e); }
   };
 
-  const generatePDFCard = async (member: any) => {
-    const esc = (value: any, fallback: string) => escapeHtml(String(value || fallback));
-    const name = esc(member.fullName || member.name, 'Community Member');
-    const cardNo = esc(member.cardNumber || member.membershipNumber, 'ZJ-2026-000');
-    const blood = esc(member.bloodGroup || member.bloodType, '—');
-    const village = esc(member.village, 'Jawkhela');
-    const cnic = esc(member.cnic, '00000-0000000-0');
-    const el = document.createElement('div');
-    el.style.cssText = 'width:1011px;height:569px;position:absolute;left:-9999px;overflow:hidden;box-sizing:border-box;padding:38px;border-radius:28px;background:linear-gradient(135deg,#f9fcfa,#fff 62%,#edf7f1);border:5px solid #0b7958;box-shadow:0 18px 36px #063d2d33;font-family:Arial,sans-serif;color:#075c41;';
-    const photo = member.profileImageUrl ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="width:226px;height:286px;object-fit:cover;border:5px solid #d7b64c;border-radius:18px;background:#eaf4ee" />` : '<div style="width:226px;height:286px;display:flex;align-items:center;justify-content:center;border:5px solid #d7b64c;border-radius:18px;background:#eaf4ee;color:#087653;font-size:42px;font-weight:900">PHOTO</div>';
-    const field = (label: string, value: string) => `<div style="min-width:0"><div style="color:#6b8177;font-size:12px;font-weight:800;letter-spacing:1px">${label}</div><div style="color:#075c41;font-size:24px;line-height:1.25;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${value}</div></div>`;
-    el.innerHTML = `<div style="height:116px;margin:-38px -38px 30px;padding:22px 38px;box-sizing:border-box;background:linear-gradient(110deg,#075c41,#0b8a64);color:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid #d7b64c"><div><div style="font-size:30px;font-weight:900;letter-spacing:1px">Zwanan Jawkhela</div><div style="font-size:16px;font-weight:700;letter-spacing:2px">YOUTH WELFARE COMMUNITY</div></div><div dir="rtl" style="font-size:28px;font-weight:800;white-space:nowrap">زوانان جوخیله تنظیم</div></div><div style="display:grid;grid-template-columns:250px 1fr;gap:34px;align-items:start">${photo}<div style="display:grid;gap:20px;padding-top:6px">${field('FULL NAME',name)}${field('MEMBERSHIP NUMBER',cardNo)}${field('CNIC / ID',cnic)}<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">${field('BLOOD GROUP',blood)}${field('VILLAGE',village)}</div></div></div><div style="margin-top:20px;padding-top:12px;border-top:2px solid #d7b64c;display:flex;justify-content:space-between;color:#527165;font-size:13px;font-weight:800;letter-spacing:1px"><span>UNITY · RESPECT · SERVICE</span><span>PRIVATE COMMUNITY MEMBER ID</span></div>`;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 569] });
-    try { document.body.appendChild(el); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' }); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 569); document.body.removeChild(el); pdf.save(`ZJ_Normal_Member_ID_${name.replace(/\s+/g, '_')}.pdf`); } catch (error) { document.body.removeChild(el); console.error(error); alert('Failed to generate membership card.'); }
-  };
-
   const initiateWhatsApp = (phone: string, name: string) => {
     // Very basic integration using click-to-chat
     const cleanPhone = phone.replace(/[^0-9]/g, '');
@@ -884,12 +868,6 @@ export function Admin() {
                             </td>
                             <td className="p-4">
                               <div className="flex gap-2">
-                                <button 
-                                  onClick={() => generatePDFCard(member)}
-                                  className="flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                                >
-                                  <Printer size={16} /> Card
-                                </button>
                                 <button 
                                   onClick={() => initiateWhatsApp(member.phone, member.fullName || member.name)}
                                   className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"

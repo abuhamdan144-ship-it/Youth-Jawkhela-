@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Upload, FileText, Download, CheckCircle, ChevronLeft } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Upload, CheckCircle, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MembershipCard } from './MembershipCard';
 
 export function MembershipPage() {
   const [form, setForm] = useState({
@@ -76,24 +73,6 @@ export function MembershipPage() {
       }
     } catch (error) {
       setStatusMessage('Error checking status.');
-    }
-  };
-
-  const handleDownloadCard = async () => {
-    if (!memberData || memberData.status !== 'Approved') return;
-    
-    const cardEl = document.getElementById('membership-card-preview');
-    if (!cardEl) return;
-
-    try {
-      const canvas = await html2canvas(cardEl, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 350] });
-      pdf.addImage(imgData, 'PNG', 0, 0, 600, 350);
-      pdf.save(`ZJ_Membership_${memberData.fullName}.pdf`);
-    } catch (error) {
-      console.error("PDF generation error", error);
-      alert('Failed to generate PDF');
     }
   };
 
@@ -186,20 +165,6 @@ export function MembershipPage() {
 
         {/* Right Col: Live Preview & Status Check */}
         <div className="space-y-8">
-          {/* Card Preview (Uses form data if no memberData, otherwise uses memberData) */}
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Card Preview</h2>
-            <div className="overflow-x-auto pb-4">
-              <div id="membership-card-preview" className="membership-page-card-preview"><MembershipCard member={{ fullName: memberData?.fullName || form.fullName || 'YOUR NAME', cardNumber: memberData?.cardNumber || 'PENDING', bloodGroup: memberData?.bloodGroup || form.bloodGroup, cnic: memberData?.cnic || form.cnic || '00000-0000000-0', village: memberData?.village || form.village || 'Location', phone: memberData?.phone || form.phone || '+92 Community Helpline', issueDate: memberData?.issueDate || '2026', expiryDate: memberData?.expiryDate || '30 Sep 2027', profileImageUrl: memberData?.profileImageUrl || profileImage }} variant="emerald" /></div>
-            </div>
-            
-            {(memberData?.status === 'Approved') && (
-              <button onClick={handleDownloadCard} className="mt-4 w-full bg-[#f4ca73] text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2">
-                <Download size={18} /> Download Card PDF
-              </button>
-            )}
-          </div>
-
           {/* Status Check */}
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Check Status & Download</h2>
