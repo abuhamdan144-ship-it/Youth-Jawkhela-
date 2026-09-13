@@ -11,22 +11,14 @@ export interface MembershipCardData {
   phone?: string;
   profileImageUrl?: string;
   cnic?: string;
-  issueDate?: string;
-  expiryDate?: string;
+  issueDate?: unknown;
+  expiryDate?: unknown;
 }
 
 const CARD_WIDTH = 1011;
 const CARD_HEIGHT = 569;
 const green = '#087653';
 const darkGreen = '#075c41';
-
-function formatCardDate(value: unknown, fallback: string) {
-  if (!value) return fallback;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object' && value && 'toDate' in value && typeof value.toDate === 'function') return value.toDate().toLocaleDateString('en-GB');
-  if (typeof value === 'object' && value && 'seconds' in value && typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleDateString('en-GB');
-  return fallback;
-}
 
 function FrontCard({ member }: { member: MembershipCardData }) {
   const name = member.fullName || member.name || 'YOUR NAME';
@@ -35,17 +27,18 @@ function FrontCard({ member }: { member: MembershipCardData }) {
   const village = member.village || 'Location';
   const cnic = member.cnic || '00000-0000000-0';
   const initials = name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
-  const field = (label: string, value: string, style: React.CSSProperties) => <div className="absolute overflow-hidden whitespace-nowrap" style={style}><small style={{ display: 'block', color: '#5a7a6e', fontSize: 10, fontWeight: 800, letterSpacing: 1.1 }}>{label}</small><strong style={{ display: 'block', color: darkGreen, fontSize: 24, lineHeight: 1.2, fontWeight: 800 }}>{value}</strong></div>;
-  return (
-    <div className="relative overflow-hidden bg-white" style={{ width: CARD_WIDTH, height: CARD_HEIGHT, background: "url('/member-card-minimal-front-title.png') center / cover no-repeat", fontFamily: 'Arial, sans-serif' }}>
-      {member.profileImageUrl ? <img src={member.profileImageUrl} alt="Member" crossOrigin="anonymous" className="absolute object-cover" style={{ left: 118, top: 199, width: 221, height: 276, border: '4px solid #087653', borderRadius: 12 }} /> : <div className="absolute flex items-center justify-center font-extrabold" style={{ left: 118, top: 199, width: 221, height: 276, border: '4px solid #087653', borderRadius: 12, background: '#eef7f1', color: green, fontSize: 28 }}>{initials}</div>}
-      {field('FULL NAME', name, { left: 370, top: 218, width: 590 })}
-      {field('MEMBERSHIP NUMBER', cardNo, { left: 370, top: 269, width: 590 })}
-      {field('CNIC / ID', cnic, { left: 370, top: 320, width: 590 })}
-      {field('BLOOD GROUP', blood, { left: 370, top: 371, width: 250 })}
-      {field('VILLAGE', village, { left: 650, top: 371, width: 300 })}
+  const field = (label: string, value: string) => <div style={{ minWidth: 0 }}><div style={{ color: '#6b8177', fontSize: 12, fontWeight: 800, letterSpacing: 1 }}>{label}</div><div style={{ color: darkGreen, fontSize: 24, lineHeight: 1.25, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div></div>;
+  return <div style={{ width: CARD_WIDTH, height: CARD_HEIGHT, boxSizing: 'border-box', padding: 38, borderRadius: 28, overflow: 'hidden', background: 'linear-gradient(135deg,#f9fcfa 0%,#fff 62%,#edf7f1 100%)', border: '5px solid #0b7958', boxShadow: '0 18px 36px #063d2d33', fontFamily: 'Arial,sans-serif', color: darkGreen }}>
+    <div style={{ height: 116, margin: -38, marginBottom: 30, padding: '22px 38px', boxSizing: 'border-box', background: 'linear-gradient(110deg,#075c41,#0b8a64)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '4px solid #d7b64c' }}>
+      <div><div style={{ fontSize: 30, fontWeight: 900, letterSpacing: 1 }}>Zwanan Jawkhela</div><div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 2 }}>YOUTH WELFARE COMMUNITY</div></div>
+      <div dir="rtl" style={{ fontSize: 28, fontWeight: 800, whiteSpace: 'nowrap' }}>زوانان جوخیله تنظیم</div>
     </div>
-  );
+    <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: 34, alignItems: 'start' }}>
+      {member.profileImageUrl ? <img src={member.profileImageUrl} alt="Member" crossOrigin="anonymous" style={{ width: 226, height: 286, objectFit: 'cover', border: '5px solid #d7b64c', borderRadius: 18, background: '#eaf4ee' }} /> : <div style={{ width: 226, height: 286, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '5px solid #d7b64c', borderRadius: 18, background: '#eaf4ee', color: green, fontSize: 42, fontWeight: 900 }}>{initials}</div>}
+      <div style={{ display: 'grid', gap: 20, paddingTop: 6 }}>{field('FULL NAME', name)}{field('MEMBERSHIP NUMBER', cardNo)}{field('CNIC / ID', cnic)}<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>{field('BLOOD GROUP', blood)}{field('VILLAGE', village)}</div></div>
+    </div>
+    <div style={{ marginTop: 20, paddingTop: 12, borderTop: '2px solid #d7b64c', display: 'flex', justifyContent: 'space-between', color: '#527165', fontSize: 13, fontWeight: 800, letterSpacing: 1 }}><span>UNITY · RESPECT · SERVICE</span><span>PRIVATE COMMUNITY MEMBER ID</span></div>
+  </div>;
 }
 
 export function MembershipCard({ member }: { member: MembershipCardData; variant?: string; demo?: boolean }) {
@@ -54,6 +47,4 @@ export function MembershipCard({ member }: { member: MembershipCardData; variant
 
 export default MembershipCard;
 
-export function MembershipCardDemo() {
-  return <MembershipCard member={{ fullName: 'YOUR NAME', cardNumber: 'ZJ-2026-000', bloodGroup: 'O+', village: 'Jawkhela' }} />;
-}
+export function MembershipCardDemo() { return <MembershipCard member={{ fullName: 'YOUR NAME', cardNumber: 'ZJ-2026-000', bloodGroup: 'O+', village: 'Jawkhela' }} />; }
