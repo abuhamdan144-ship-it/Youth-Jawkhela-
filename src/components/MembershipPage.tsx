@@ -82,9 +82,13 @@ export function MembershipPage() {
   const downloadCard = async () => {
     const element = document.getElementById('membership-card-preview');
     if (!element) return;
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [900, 520] });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 900, 520);
+    const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
+    // Keep the exact captured ratio. The previous fixed 900x520 canvas stretched
+    // the mobile card and made text look broken in downloaded PDFs.
+    const width = canvas.width;
+    const height = canvas.height;
+    const pdf = new jsPDF({ orientation: width >= height ? 'landscape' : 'portrait', unit: 'px', format: [width, height] });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height, undefined, 'FAST');
     pdf.save(`ZJ_Membership_${cardMember.fullName || 'Preview'}.pdf`);
   };
 
