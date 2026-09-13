@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Upload, CheckCircle, ChevronLeft } from 'lucide-react';
+import { Upload, Download, CheckCircle, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export function MembershipPage() {
   const [form, setForm] = useState({
@@ -74,6 +76,16 @@ export function MembershipPage() {
     } catch (error) {
       setStatusMessage('Error checking status.');
     }
+  };
+
+  const cardMember = memberData || { ...form, profileImageUrl: profileImage, cardNumber: 'PENDING' };
+  const downloadCard = async () => {
+    const element = document.getElementById('membership-card-preview');
+    if (!element) return;
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [900, 520] });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 900, 520);
+    pdf.save(`ZJ_Membership_${cardMember.fullName || 'Preview'}.pdf`);
   };
 
   return (
@@ -165,6 +177,17 @@ export function MembershipPage() {
 
         {/* Right Col: Live Preview & Status Check */}
         <div className="space-y-8">
+          {/* Live membership card preview */}
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-gray-900">Membership Card Preview</h2><span className="text-xs font-bold text-green-700">LIVE</span></div>
+            <div id="membership-card-preview" className="membership-card-simple">
+              <div className="membership-card-simple__header"><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
+              <div className="membership-card-simple__body"><div className="membership-card-simple__photo">{cardMember.profileImageUrl ? <img src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="membership-card-simple__fields"><div><small>FULL NAME</small><strong>{cardMember.fullName || 'YOUR NAME'}</strong></div><div><small>FATHER'S NAME</small><strong>{cardMember.fatherName || '—'}</strong></div><div><small>CNIC / ID</small><strong>{cardMember.cnic || 'XXXXX-XXXXXXX-X'}</strong></div><div className="membership-card-simple__split"><div><small>BLOOD GROUP</small><strong>{cardMember.bloodGroup || 'A+'}</strong></div><div><small>VILLAGE</small><strong>{cardMember.village || 'Location'}</strong></div></div></div></div>
+              <div className="membership-card-simple__footer"><span>PRIVATE COMMUNITY MEMBER ID</span><span>{cardMember.cardNumber || 'PENDING APPROVAL'}</span></div>
+            </div>
+            <button onClick={downloadCard} className="mt-4 w-full bg-[#075c41] text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors flex items-center justify-center gap-2"><Download size={18} /> Download Membership Card</button>
+          </div>
+
           {/* Status Check */}
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Check Status & Download</h2>
