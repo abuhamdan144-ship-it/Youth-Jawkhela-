@@ -692,89 +692,39 @@ export function Admin() {
   }
 
   const selectTab = (tab: string) => { setActiveTab(tab); setSidebarOpen(false); };
+  const adminTabs = [
+    { key: 'dashboard', label: 'Dashboard', action: 'Overview', icon: LayoutDashboard },
+    { key: 'members', label: 'Members', action: 'Add member', icon: Users },
+    { key: 'donations', label: 'Donations', action: 'Record donation', icon: CreditCard },
+    { key: 'blood', label: 'Blood group', action: 'Add request', icon: Droplet },
+    { key: 'overseas', label: 'Overseas', action: 'Add record', icon: Globe2 },
+    { key: 'cabinet', label: 'Cabinet', action: 'Add member', icon: Briefcase },
+    { key: 'meetings', label: 'Meetings', action: 'Add summary', icon: FileText },
+    { key: 'news', label: 'Announcements', action: 'Publish update', icon: Newspaper },
+    { key: 'voting', label: 'Voting', action: 'Add candidate', icon: Vote },
+    { key: 'ads', label: 'Ads', action: 'Publish ad', icon: CheckCircle },
+  ];
   return (
     <div className="admin-dashboard flex min-h-screen min-w-0 bg-gray-100">
-      {sidebarOpen && <button aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-20 bg-black/40 lg:hidden" />}
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-accent text-white shadow-xl flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-xl font-bold text-secondary">Admin Dashboard</h2>
-          <p className="text-sm text-gray-400 mt-1">{user.email}</p>
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <div className="bg-accent text-white shadow-xl">
+          <div className="px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
+            <div><h2 className="text-xl font-bold text-secondary">Admin Dashboard</h2><p className="text-xs text-gray-300 mt-1">{user.email}</p></div>
+            <button onClick={handleLogout} className="flex items-center gap-2 rounded-lg border border-gray-500 px-3 py-2 text-sm font-bold text-gray-100 hover:bg-gray-800 transition-colors"><LogOut size={16} /> Sign Out</button>
+          </div>
+          <nav aria-label="Admin categories" className="flex gap-2 overflow-x-auto px-4 sm:px-8 pb-4">
+            {adminTabs.map(({ key, label, action, icon: Icon }) => (
+              <button key={key} onClick={() => selectTab(key)} className={`group flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${activeTab === key ? 'border-secondary bg-secondary text-gray-900 shadow-md' : 'border-white/15 bg-white/10 text-white hover:bg-white/20'}`}>
+                <Icon size={17} />
+                <span><strong className="block text-sm leading-tight">{label}{key === 'members' && pendingMembers.length > 0 ? ` (${pendingMembers.length})` : ''}</strong><small className={`block text-[10px] ${activeTab === key ? 'text-gray-700' : 'text-gray-300'}`}>{action}</small></span>
+              </button>
+            ))}
+          </nav>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          <button 
-            onClick={() => selectTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'dashboard' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <LayoutDashboard size={20} /> Dashboard
-          </button>
-          <button 
-            onClick={() => selectTab('members')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'members' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <Users size={20} /> Membership
-            {pendingMembers.length > 0 && (
-              <span className="ml-auto bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full">{pendingMembers.length}</span>
-            )}
-          </button>
-          <button 
-            onClick={() => selectTab('donations')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'donations' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <CreditCard size={20} /> Donations
-          </button>
-          <button 
-            onClick={() => selectTab('blood')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'blood' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <Droplet size={20} /> Blood Database
-          </button>
-          <button 
-            onClick={() => selectTab('overseas')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'overseas' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <Globe2 size={20} /> Overseas
-          </button>
-          <button 
-            onClick={() => selectTab('cabinet')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'cabinet' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <Briefcase size={20} /> Cabinet Members
-          </button>
-          <button 
-            onClick={() => selectTab('meetings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'meetings' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <FileText size={20} /> Meetings
-          </button>
-          <button 
-            onClick={() => selectTab('news')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'news' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <Newspaper size={20} /> Announcements
-          </button>
-          <button onClick={() => selectTab('voting')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'voting' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}><Vote size={20} /> Voting System</button>
-          <button 
-            onClick={() => selectTab('ads')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'ads' ? 'bg-primary text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-          >
-            <CheckCircle size={20} /> Paid Ads
-          </button>
-        </nav>
-        <div className="p-4 border-t border-gray-700">
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <LogOut size={20} /> Sign Out
-          </button>
-        </div>
-      </div>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10 p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3"><button aria-label="Open navigation" onClick={() => setSidebarOpen(true)} className="lg:hidden rounded-lg p-2 text-gray-600 hover:bg-gray-100"><Menu size={22} /></button><h1 className="text-xl sm:text-2xl font-bold text-gray-800 capitalize">{activeTab.replace('-', ' ')}</h1></div>
+          <div className="flex items-center justify-between gap-3"><h1 className="text-xl sm:text-2xl font-bold text-gray-800 capitalize">{adminTabs.find((tab) => tab.key === activeTab)?.label || activeTab.replace('-', ' ')}</h1><span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-gray-400">{adminTabs.find((tab) => tab.key === activeTab)?.action}</span></div>
         </header>
         
         <main className="flex-1 min-w-0 overflow-auto p-4 sm:p-8">
