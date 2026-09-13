@@ -527,35 +527,18 @@ export function Admin() {
   };
 
   const generatePDFCard = async (member: any) => {
-    const cardDate = (value: any, fallback: string) => {
-      if (!value) return fallback;
-      if (typeof value === 'string') return value;
-      if (typeof value.toDate === 'function') return value.toDate().toLocaleDateString('en-GB');
-      if (typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleDateString('en-GB');
-      return fallback;
-    };
     const name = escapeHtml(member.fullName || member.name || 'Community Member');
     const cardNo = escapeHtml(member.cardNumber || member.membershipNumber || 'ZJ-2026-000');
     const blood = escapeHtml(member.bloodGroup || member.bloodType || '—');
     const village = escapeHtml(member.village || 'Jawkhela');
     const cnic = escapeHtml(member.cnic || '00000-0000000-0');
-    const phone = escapeHtml(member.phone || '+92 Community Helpline');
-    const issue = escapeHtml(cardDate(member.issueDate, '2026'));
-    const expiry = escapeHtml(cardDate(member.expiryDate, '30 Sep 2027'));
-    const makeCard = (side: 'front' | 'back') => {
-      const el = document.createElement('div');
-      el.style.cssText = `width:1011px;height:569px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-minimal-${side}-title.png') center/cover no-repeat;font-family:Arial,sans-serif;`;
-      if (side === 'front') {
-        const photo = member.profileImageUrl ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="position:absolute;left:118px;top:199px;width:221px;height:276px;object-fit:cover;border:4px solid #087653;border-radius:12px" />` : `<div style="position:absolute;left:118px;top:199px;width:221px;height:276px;display:flex;align-items:center;justify-content:center;border:4px solid #087653;border-radius:12px;background:#eef7f1;color:#087653;font-size:28px;font-weight:800">PHOTO</div>`;
-        const field = (label: string, value: string, left: number, top: number, width: number) => `<div style="position:absolute;left:${left}px;top:${top}px;width:${width}px;overflow:hidden;white-space:nowrap"><small style="display:block;color:#5a7a6e;font-size:10px;font-weight:800;letter-spacing:1.1px">${label}</small><strong style="display:block;color:#075c41;font-size:24px;line-height:1.2;font-weight:800">${value}</strong></div>`;
-        el.innerHTML = `${photo}${field('FULL NAME', name, 370, 218, 590)}${field('MEMBERSHIP NUMBER', cardNo, 370, 269, 590)}${field('CNIC / ID', cnic, 370, 320, 590)}${field('BLOOD GROUP', blood, 370, 371, 250)}${field('VILLAGE', village, 650, 371, 300)}`;
-      } else {
-        el.innerHTML = `<div style="position:absolute;left:94px;top:122px;width:620px;color:#075c41"><div style="font-size:22px;font-weight:800;letter-spacing:1px">MEMBER BENEFITS</div><div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;color:#4a6c5f;font-size:16px;font-weight:700"><span>• Community networking</span><span>• Social support</span><span>• Educational resources</span><span>• Advocacy and welfare</span></div></div><div style="position:absolute;left:755px;top:145px;width:155px;text-align:center;color:#58796c;font-size:12px;font-weight:800">SCAN FOR<br/>VERIFICATION</div><div style="position:absolute;left:120px;top:485px;color:#075c41;font-size:15px;font-weight:800">PHONE: ${phone}</div><div style="position:absolute;left:575px;top:485px;color:#075c41;font-size:15px;font-weight:800">ISSUED: ${issue} · VALID: ${expiry}</div>`;
-      }
-      document.body.appendChild(el); return el;
-    };
+    const el = document.createElement('div');
+    el.style.cssText = "width:1011px;height:569px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-minimal-front-title.png') center/cover no-repeat;font-family:Arial,sans-serif;";
+    const photo = member.profileImageUrl ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="position:absolute;left:118px;top:199px;width:221px;height:276px;object-fit:cover;border:4px solid #087653;border-radius:12px" />` : `<div style="position:absolute;left:118px;top:199px;width:221px;height:276px;display:flex;align-items:center;justify-content:center;border:4px solid #087653;border-radius:12px;background:#eef7f1;color:#087653;font-size:28px;font-weight:800">PHOTO</div>`;
+    const field = (label: string, value: string, left: number, top: number, width: number) => `<div style="position:absolute;left:${left}px;top:${top}px;width:${width}px;overflow:hidden;white-space:nowrap"><small style="display:block;color:#5a7a6e;font-size:10px;font-weight:800;letter-spacing:1.1px">${label}</small><strong style="display:block;color:#075c41;font-size:24px;line-height:1.2;font-weight:800">${value}</strong></div>`;
+    el.innerHTML = `${photo}${field('FULL NAME', name, 370, 218, 590)}${field('MEMBERSHIP NUMBER', cardNo, 370, 269, 590)}${field('CNIC / ID', cnic, 370, 320, 590)}${field('BLOOD GROUP', blood, 370, 371, 250)}${field('VILLAGE', village, 650, 371, 300)}`;
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 569] });
-    try { for (const side of ['front', 'back'] as const) { const el = makeCard(side); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' }); if (side === 'back') pdf.addPage([1011, 569], 'landscape'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 569); document.body.removeChild(el); } pdf.save(`ZJ_Minimal_Member_ID_${name.replace(/\s+/g, '_')}.pdf`); } catch (error) { console.error(error); alert('Failed to generate membership card.'); }
+    try { document.body.appendChild(el); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' }); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 569); document.body.removeChild(el); pdf.save(`ZJ_Minimal_Member_ID_${name.replace(/\s+/g, '_')}.pdf`); } catch (error) { document.body.removeChild(el); console.error(error); alert('Failed to generate membership card.'); }
   };
 
   const initiateWhatsApp = (phone: string, name: string) => {

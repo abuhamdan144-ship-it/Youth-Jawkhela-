@@ -48,22 +48,8 @@ function FrontCard({ member }: { member: MembershipCardData }) {
   );
 }
 
-function BackCard({ member }: { member: MembershipCardData }) {
-  const phone = member.phone || '+92 Community Helpline';
-  const issue = formatCardDate(member.issueDate, '2026');
-  const expiry = formatCardDate(member.expiryDate, '30 Sep 2027');
-  return (
-    <div className="relative overflow-hidden bg-white" style={{ width: CARD_WIDTH, height: CARD_HEIGHT, background: "url('/member-card-minimal-back-title.png') center / cover no-repeat", fontFamily: 'Arial, sans-serif' }}>
-      <div className="absolute" style={{ left: 94, top: 122, width: 620, color: darkGreen }}><div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>MEMBER BENEFITS</div><div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, color: '#4a6c5f', fontSize: 16, fontWeight: 700 }}><span>• Community networking</span><span>• Social support</span><span>• Educational resources</span><span>• Advocacy and welfare</span></div></div>
-      <div className="absolute text-center" style={{ left: 755, top: 145, width: 155, color: '#58796c', fontSize: 12, fontWeight: 800 }}>SCAN FOR<br />VERIFICATION</div>
-      <div className="absolute" style={{ left: 120, top: 485, color: darkGreen, fontSize: 15, fontWeight: 800 }}>PHONE: {phone}</div>
-      <div className="absolute" style={{ left: 575, top: 485, color: darkGreen, fontSize: 15, fontWeight: 800 }}>ISSUED: {issue} · VALID: {expiry}</div>
-    </div>
-  );
-}
-
 export function MembershipCard({ member }: { member: MembershipCardData; variant?: string; demo?: boolean }) {
-  return <div style={{ containerType: 'inline-size', width: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>{[<FrontCard member={member} />, <BackCard member={member} />].map((card, index) => <div key={index} style={{ position: 'relative', width: '100%', paddingTop: `${(CARD_HEIGHT / CARD_WIDTH) * 100}%` }}><div style={{ position: 'absolute', inset: 0, width: CARD_WIDTH, height: CARD_HEIGHT, transform: 'scale(calc(100cqi / 1011))', transformOrigin: 'top left' }}>{card}</div></div>)}</div>;
+  return <div style={{ containerType: 'inline-size', width: '100%' }}><div style={{ position: 'relative', width: '100%', paddingTop: `${(CARD_HEIGHT / CARD_WIDTH) * 100}%` }}><div style={{ position: 'absolute', inset: 0, width: CARD_WIDTH, height: CARD_HEIGHT, transform: 'scale(calc(100cqi / 1011))', transformOrigin: 'top left' }}><FrontCard member={member} /></div></div></div>;
 }
 
 export default MembershipCard;
