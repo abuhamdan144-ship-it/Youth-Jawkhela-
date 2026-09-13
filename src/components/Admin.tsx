@@ -42,6 +42,14 @@ async function imageFileToDataUrl(file: File): Promise<string> {
   }
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 const AdminItemActions = ({ 
   collectionName, 
@@ -519,15 +527,22 @@ export function Admin() {
   };
 
   const generatePDFCard = async (member: any) => {
-    const name = member.fullName || member.name || 'Community Member';
-    const cardNo = member.cardNumber || member.membershipNumber || 'ZJ-2026-000';
-    const blood = member.bloodGroup || member.bloodType || '—';
-    const village = member.village || 'Jawkhela';
+    const name = escapeHtml(member.fullName || member.name || 'Community Member');
+    const cardNo = escapeHtml(member.cardNumber || member.membershipNumber || 'ZJ-2026-000');
+    const blood = escapeHtml(member.bloodGroup || member.bloodType || '—');
+    const village = escapeHtml(member.village || 'Jawkhela');
+    const phone = escapeHtml(member.phone || '+92 Community Helpline');
     const makeCard = (side: 'front' | 'back') => {
       const el = document.createElement('div');
       el.style.cssText = `width:1011px;height:638px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-gemini-${side}.png') center/cover no-repeat;font-family:Arial,sans-serif;`;
-      if (side === 'front') el.innerHTML = `<div style="position:absolute;left:265px;top:245px;font-size:30px;font-weight:800;color:#064a35;background:#ffffffdd;padding:3px 12px">${name}</div><div style="position:absolute;left:265px;top:360px;font-size:29px;font-weight:800;color:#064a35;background:#ffffffdd;padding:3px 12px">${cardNo}</div><div style="position:absolute;left:265px;top:478px;font-size:24px;font-weight:700;color:#064a35;background:#ffffffdd;padding:2px 10px">${blood} · ${village}</div>${member.profileImageUrl ? `<img src="${member.profileImageUrl}" crossorigin="anonymous" style="position:absolute;left:76px;top:205px;width:235px;height:280px;object-fit:cover;border:5px solid #d4a928;border-radius:16px" />` : ''}`;
-      else el.innerHTML = `<div style="position:absolute;left:250px;bottom:135px;font-size:22px;font-weight:700;color:#064a35;background:#ffffffdd;padding:3px 10px">${member.phone || '+92 Community Helpline'}</div>`;
+      if (side === 'front') {
+        const photo = member.profileImageUrl
+          ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="position:absolute;left:76px;top:205px;width:235px;height:280px;object-fit:cover;border:5px solid #d4a928;border-radius:16px" />`
+          : `<div style="position:absolute;left:76px;top:205px;width:235px;height:280px;display:flex;align-items:center;justify-content:center;border:5px solid #d4a928;border-radius:16px;background:#f3f6f3;color:#075b43;font-size:28px;font-weight:800">PHOTO</div>`;
+        el.innerHTML = `${photo}<div style="position:absolute;left:250px;top:235px;width:650px;height:75px;background:#f3f6f3"></div><div style="position:absolute;left:250px;top:350px;width:650px;height:75px;background:#f3f6f3"></div><div style="position:absolute;left:250px;top:465px;width:175px;height:62px;background:#f3f6f3"></div><div style="position:absolute;left:610px;top:465px;width:300px;height:62px;background:#f3f6f3"></div><div style="position:absolute;left:265px;top:245px;font-size:30px;font-weight:800;color:#064a35;padding:3px 12px">${name}</div><div style="position:absolute;left:265px;top:360px;font-size:29px;font-weight:800;color:#064a35;padding:3px 12px">${cardNo}</div><div style="position:absolute;left:265px;top:478px;font-size:24px;font-weight:700;color:#064a35;padding:2px 10px">${blood}</div><div style="position:absolute;left:635px;top:478px;font-size:24px;font-weight:700;color:#064a35;padding:2px 10px">${village}</div>`;
+      } else {
+        el.innerHTML = `<div style="position:absolute;left:640px;top:466px;width:310px;height:45px;background:#f3f6f3"></div><div style="position:absolute;left:645px;top:472px;font-size:22px;font-weight:700;color:#064a35;padding:3px 10px">${phone}</div>`;
+      }
       document.body.appendChild(el); return el;
     };
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 638] });
