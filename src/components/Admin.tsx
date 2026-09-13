@@ -531,22 +531,24 @@ export function Admin() {
     const cardNo = escapeHtml(member.cardNumber || member.membershipNumber || 'ZJ-2026-000');
     const blood = escapeHtml(member.bloodGroup || member.bloodType || '—');
     const village = escapeHtml(member.village || 'Jawkhela');
+    const cnic = escapeHtml(member.cnic || '00000-0000000-0');
     const phone = escapeHtml(member.phone || '+92 Community Helpline');
+    const issue = escapeHtml(member.issueDate || '2026');
+    const expiry = escapeHtml(member.expiryDate || '30 Sep 2027');
     const makeCard = (side: 'front' | 'back') => {
       const el = document.createElement('div');
-      el.style.cssText = `width:1011px;height:638px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-gemini-${side}.png') center/cover no-repeat;font-family:Arial,sans-serif;`;
+      el.style.cssText = `width:1011px;height:569px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-minimal-${side}-title.png') center/cover no-repeat;font-family:Arial,sans-serif;`;
       if (side === 'front') {
-        const photo = member.profileImageUrl
-          ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="position:absolute;left:76px;top:205px;width:235px;height:280px;object-fit:cover;border:5px solid #d4a928;border-radius:16px" />`
-          : `<div style="position:absolute;left:76px;top:205px;width:235px;height:280px;display:flex;align-items:center;justify-content:center;border:5px solid #d4a928;border-radius:16px;background:#f3f6f3;color:#075b43;font-size:28px;font-weight:800">PHOTO</div>`;
-        el.innerHTML = `${photo}<div style="position:absolute;left:250px;top:235px;width:650px;height:75px;background:#f3f6f3"></div><div style="position:absolute;left:250px;top:350px;width:650px;height:75px;background:#f3f6f3"></div><div style="position:absolute;left:250px;top:465px;width:175px;height:62px;background:#f3f6f3"></div><div style="position:absolute;left:610px;top:465px;width:300px;height:62px;background:#f3f6f3"></div><div style="position:absolute;left:265px;top:245px;font-size:30px;font-weight:800;color:#064a35;padding:3px 12px">${name}</div><div style="position:absolute;left:265px;top:360px;font-size:29px;font-weight:800;color:#064a35;padding:3px 12px">${cardNo}</div><div style="position:absolute;left:265px;top:478px;font-size:24px;font-weight:700;color:#064a35;padding:2px 10px">${blood}</div><div style="position:absolute;left:635px;top:478px;font-size:24px;font-weight:700;color:#064a35;padding:2px 10px">${village}</div>`;
+        const photo = member.profileImageUrl ? `<img src="${escapeHtml(member.profileImageUrl)}" crossorigin="anonymous" style="position:absolute;left:118px;top:199px;width:221px;height:276px;object-fit:cover;border:4px solid #087653;border-radius:12px" />` : `<div style="position:absolute;left:118px;top:199px;width:221px;height:276px;display:flex;align-items:center;justify-content:center;border:4px solid #087653;border-radius:12px;background:#eef7f1;color:#087653;font-size:28px;font-weight:800">PHOTO</div>`;
+        const field = (label: string, value: string, left: number, top: number, width: number) => `<div style="position:absolute;left:${left}px;top:${top}px;width:${width}px;overflow:hidden;white-space:nowrap"><small style="display:block;color:#5a7a6e;font-size:10px;font-weight:800;letter-spacing:1.1px">${label}</small><strong style="display:block;color:#075c41;font-size:24px;line-height:1.2;font-weight:800">${value}</strong></div>`;
+        el.innerHTML = `${photo}${field('FULL NAME', name, 370, 218, 590)}${field('MEMBERSHIP NUMBER', cardNo, 370, 269, 590)}${field('CNIC / ID', cnic, 370, 320, 590)}${field('BLOOD GROUP', blood, 370, 371, 250)}${field('VILLAGE', village, 650, 371, 300)}`;
       } else {
-        el.innerHTML = `<div style="position:absolute;left:640px;top:466px;width:310px;height:45px;background:#f3f6f3"></div><div style="position:absolute;left:645px;top:472px;font-size:22px;font-weight:700;color:#064a35;padding:3px 10px">${phone}</div>`;
+        el.innerHTML = `<div style="position:absolute;left:94px;top:122px;width:620px;color:#075c41"><div style="font-size:22px;font-weight:800;letter-spacing:1px">MEMBER BENEFITS</div><div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;color:#4a6c5f;font-size:16px;font-weight:700"><span>• Community networking</span><span>• Social support</span><span>• Educational resources</span><span>• Advocacy and welfare</span></div></div><div style="position:absolute;left:755px;top:145px;width:155px;text-align:center;color:#58796c;font-size:12px;font-weight:800">SCAN FOR<br/>VERIFICATION</div><div style="position:absolute;left:120px;top:485px;color:#075c41;font-size:15px;font-weight:800">PHONE: ${phone}</div><div style="position:absolute;left:575px;top:485px;color:#075c41;font-size:15px;font-weight:800">ISSUED: ${issue} · VALID: ${expiry}</div>`;
       }
       document.body.appendChild(el); return el;
     };
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 638] });
-    try { for (const side of ['front', 'back'] as const) { const el = makeCard(side); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' }); if (side === 'back') pdf.addPage([1011, 638], 'landscape'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 638); document.body.removeChild(el); } pdf.save(`ZJ_Gemini_Member_ID_${name.replace(/\s+/g, '_')}.pdf`); } catch (error) { console.error(error); alert('Failed to generate Gemini membership card.'); }
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1011, 569] });
+    try { for (const side of ['front', 'back'] as const) { const el = makeCard(side); const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' }); if (side === 'back') pdf.addPage([1011, 569], 'landscape'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1011, 569); document.body.removeChild(el); } pdf.save(`ZJ_Minimal_Member_ID_${name.replace(/\s+/g, '_')}.pdf`); } catch (error) { console.error(error); alert('Failed to generate membership card.'); }
   };
 
   const initiateWhatsApp = (phone: string, name: string) => {
