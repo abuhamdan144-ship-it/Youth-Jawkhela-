@@ -527,14 +527,21 @@ export function Admin() {
   };
 
   const generatePDFCard = async (member: any) => {
+    const cardDate = (value: any, fallback: string) => {
+      if (!value) return fallback;
+      if (typeof value === 'string') return value;
+      if (typeof value.toDate === 'function') return value.toDate().toLocaleDateString('en-GB');
+      if (typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleDateString('en-GB');
+      return fallback;
+    };
     const name = escapeHtml(member.fullName || member.name || 'Community Member');
     const cardNo = escapeHtml(member.cardNumber || member.membershipNumber || 'ZJ-2026-000');
     const blood = escapeHtml(member.bloodGroup || member.bloodType || '—');
     const village = escapeHtml(member.village || 'Jawkhela');
     const cnic = escapeHtml(member.cnic || '00000-0000000-0');
     const phone = escapeHtml(member.phone || '+92 Community Helpline');
-    const issue = escapeHtml(member.issueDate || '2026');
-    const expiry = escapeHtml(member.expiryDate || '30 Sep 2027');
+    const issue = escapeHtml(cardDate(member.issueDate, '2026'));
+    const expiry = escapeHtml(cardDate(member.expiryDate, '30 Sep 2027'));
     const makeCard = (side: 'front' | 'back') => {
       const el = document.createElement('div');
       el.style.cssText = `width:1011px;height:569px;position:absolute;left:-9999px;overflow:hidden;background:#fff url('/member-card-minimal-${side}-title.png') center/cover no-repeat;font-family:Arial,sans-serif;`;

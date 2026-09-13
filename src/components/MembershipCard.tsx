@@ -20,6 +20,14 @@ const CARD_HEIGHT = 569;
 const green = '#087653';
 const darkGreen = '#075c41';
 
+function formatCardDate(value: unknown, fallback: string) {
+  if (!value) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value && 'toDate' in value && typeof value.toDate === 'function') return value.toDate().toLocaleDateString('en-GB');
+  if (typeof value === 'object' && value && 'seconds' in value && typeof value.seconds === 'number') return new Date(value.seconds * 1000).toLocaleDateString('en-GB');
+  return fallback;
+}
+
 function FrontCard({ member }: { member: MembershipCardData }) {
   const name = member.fullName || member.name || 'YOUR NAME';
   const cardNo = member.cardNumber || member.membershipNumber || 'PENDING';
@@ -42,8 +50,8 @@ function FrontCard({ member }: { member: MembershipCardData }) {
 
 function BackCard({ member }: { member: MembershipCardData }) {
   const phone = member.phone || '+92 Community Helpline';
-  const issue = member.issueDate || '2026';
-  const expiry = member.expiryDate || '30 Sep 2027';
+  const issue = formatCardDate(member.issueDate, '2026');
+  const expiry = formatCardDate(member.expiryDate, '30 Sep 2027');
   return (
     <div className="relative overflow-hidden bg-white" style={{ width: CARD_WIDTH, height: CARD_HEIGHT, background: "url('/member-card-minimal-back-title.png') center / cover no-repeat", fontFamily: 'Arial, sans-serif' }}>
       <div className="absolute" style={{ left: 94, top: 122, width: 620, color: darkGreen }}><div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>MEMBER BENEFITS</div><div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, color: '#4a6c5f', fontSize: 16, fontWeight: 700 }}><span>• Community networking</span><span>• Social support</span><span>• Educational resources</span><span>• Advocacy and welfare</span></div></div>
