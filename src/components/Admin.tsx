@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote } from 'lucide-react';
+import { Users, CreditCard, LayoutDashboard, Settings, LogOut, CheckCircle, XCircle, Droplet, Briefcase, FileText, Newspaper, Menu, Globe2, ArrowUpRight, Sparkles, Vote, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
+import { MembershipCardData, generateMembershipCardPDF } from './MembershipCard';
 import { MetalButton } from './ui/metal-button';
 
 // Simplified for MVP. We check if the logged in email is the admin.
@@ -868,6 +869,12 @@ export function Admin() {
                             </td>
                             <td className="p-4">
                               <div className="flex gap-2">
+                                <button 
+                                  onClick={() => generateMembershipCardPDF(member)}
+                                  className="flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                                >
+                                  <Printer size={16} /> Card
+                                </button>
                                 <button 
                                   onClick={() => initiateWhatsApp(member.phone, member.fullName || member.name)}
                                   className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
