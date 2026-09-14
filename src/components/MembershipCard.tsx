@@ -330,7 +330,37 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     pdf.save(`ZJ_Membership_Card_${safeName}.pdf`);
   } catch (e) {
     console.error(e);
-    alert('PDF could not be generated. Please try again; the member data was not changed.');
+    try {
+      const name = member.fullName || member.name || 'COMMUNITY MEMBER';
+      const cardNo = member.cardNumber || member.membershipNumber || 'ZJ-2026-000';
+      const blood = member.bloodGroup || member.bloodType || '—';
+      const village = member.village || member.address || '—';
+      const directPdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 380] });
+      const drawPage = (back = false) => {
+        directPdf.setFillColor(255, 255, 255); directPdf.rect(0, 0, 600, 380, 'F');
+        directPdf.setFillColor(6, 62, 43); directPdf.rect(0, 0, 600, back ? 58 : 88, 'F');
+        directPdf.setDrawColor(215, 182, 76); directPdf.setLineWidth(3); directPdf.line(0, back ? 58 : 88, 600, back ? 58 : 88);
+        directPdf.setTextColor(255, 255, 255); directPdf.setFont('helvetica', 'bold'); directPdf.setFontSize(22); directPdf.text('Zwanan Jawkhela', 28, 35);
+        directPdf.setFontSize(10); directPdf.text('Youth Welfare Community', 30, 55);
+        if (back) {
+          directPdf.setTextColor(7, 92, 65); directPdf.setFontSize(22); directPdf.text('MEMBER BENEFITS', 210, 110);
+          directPdf.setFontSize(14); directPdf.text('COMMUNITY NETWORKING', 55, 165); directPdf.text('SOCIAL SUPPORT', 55, 205);
+          directPdf.text('EDUCATIONAL RESOURCES', 330, 165); directPdf.text('ADVOCACY & WELFARE', 330, 205);
+          directPdf.setTextColor(6, 62, 43); directPdf.setFontSize(13); directPdf.text('Website: jawkhela-youth.vercel.app', 55, 285); directPdf.text('Helpline: +92 300 123 4567', 55, 310);
+          directPdf.setFillColor(6, 62, 43); directPdf.rect(0, 340, 600, 40, 'F'); directPdf.setTextColor(215, 182, 76); directPdf.setFontSize(14); directPdf.text('UNITY  •  RESPECT  •  CULTURE  •  SERVICE', 145, 365);
+        } else {
+          directPdf.setTextColor(7, 92, 65); directPdf.setFontSize(26); directPdf.text('COMMUNITY MEMBER CARD', 190, 125);
+          directPdf.setFontSize(18); directPdf.text(name, 190, 175); directPdf.setTextColor(164, 121, 19); directPdf.setFontSize(15); directPdf.text(cardNo, 190, 200);
+          directPdf.setTextColor(65, 84, 74); directPdf.setFontSize(12); directPdf.text(`Father's Name: ${member.fatherName || 'Not provided'}`, 190, 235); directPdf.text(`CNIC / ID: ${member.cnic || 'Not provided'}`, 190, 260); directPdf.text(`Blood Group: ${blood}`, 190, 285); directPdf.text(`Village: ${village}`, 390, 285);
+          directPdf.setFillColor(6, 62, 43); directPdf.rect(0, 330, 600, 50, 'F'); directPdf.setTextColor(255, 255, 255); directPdf.setFontSize(18); directPdf.text(String(member.status || 'MEMBERSHIP APPLICANT').toUpperCase(), 190, 360);
+        }
+      };
+      drawPage(false); directPdf.addPage([600, 380], 'landscape'); drawPage(true);
+      const safeName = name.replace(/\s+/g, '_'); directPdf.save(`ZJ_Membership_Card_${safeName}.pdf`);
+    } catch (fallbackError) {
+      console.error('Direct PDF fallback failed', fallbackError);
+      alert('PDF could not be generated. Please try again; the member data was not changed.');
+    }
   } finally {
     root.unmount();
     if (document.body.contains(container)) {
