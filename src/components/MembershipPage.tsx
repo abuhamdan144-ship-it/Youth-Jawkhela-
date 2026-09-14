@@ -21,6 +21,7 @@ export function MembershipPage() {
   const [profileImage, setProfileImage] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [cardSide, setCardSide] = useState<'front' | 'back'>('front');
 
   // Status check state
   const [checkCnic, setCheckCnic] = useState('');
@@ -80,17 +81,21 @@ export function MembershipPage() {
 
   const cardMember = memberData || { ...form, profileImageUrl: profileImage, cardNumber: 'PENDING' };
   const downloadCard = async () => {
-    const element = document.getElementById('membership-card-preview');
-    if (!element) return;
+    const frontElement = document.getElementById('membership-card-preview-front');
+    const backElement = document.getElementById('membership-card-preview-back');
+    if (!frontElement || !backElement) return;
     if (document.fonts?.ready) await document.fonts.ready;
     await new Promise((resolve) => window.requestAnimationFrame(() => resolve(undefined)));
-    const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
-    // Keep the exact captured ratio. The previous fixed 900x520 canvas stretched
-    // the mobile card and made text look broken in downloaded PDFs.
-    const width = canvas.width;
-    const height = canvas.height;
+    const [frontCanvas, backCanvas] = await Promise.all([
+      html2canvas(frontElement, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }),
+      html2canvas(backElement, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false })
+    ]);
+    const width = frontCanvas.width;
+    const height = frontCanvas.height;
     const pdf = new jsPDF({ orientation: width >= height ? 'landscape' : 'portrait', unit: 'px', format: [width, height] });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height, undefined, 'FAST');
+    pdf.addImage(frontCanvas.toDataURL('image/png'), 'PNG', 0, 0, width, height, undefined, 'FAST');
+    pdf.addPage([width, height], width >= height ? 'landscape' : 'portrait');
+    pdf.addImage(backCanvas.toDataURL('image/png'), 'PNG', 0, 0, width, height, undefined, 'FAST');
     pdf.save(`ZJ_Membership_${cardMember.fullName || 'Preview'}.pdf`);
   };
 
@@ -186,14 +191,21 @@ export function MembershipPage() {
           {/* Live membership card preview */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-gray-900">Membership Card Preview</h2><span className="text-xs font-bold text-green-700">LIVE</span></div>
-            <div id="membership-card-preview" className="membership-card-reference">
+            <div id="membership-card-preview-front" className={`membership-card-reference ${cardSide === 'back' ? 'membership-card-side-hidden' : ''}`}>
               <div className="reference-card__green-cut" />
               <div className="reference-card__gold-cut" />
               <div className="reference-card__head"><div className="reference-card__identity"><img src="/zwanan-jawkhela-seal.jpeg" alt="Zwanan Jawkhela seal" /><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
               <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">ZJ-{cardMember.cnic || 'MEMBER-0001'}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
               <div className="reference-card__approval"><strong>{cardMember.status === 'Approved' ? 'APPROVED MEMBER' : 'MEMBERSHIP APPLICANT'}</strong><span>COMMUNITY SERVICE MEMBER</span></div>
             </div>
-            <button onClick={downloadCard} className="mt-4 w-full bg-[#075c41] text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors flex items-center justify-center gap-2"><Download size={18} /> Download Membership Card</button>
+            <div id="membership-card-preview-back" className={`membership-card-reference membership-card-reference--back ${cardSide === 'front' ? 'membership-card-side-hidden' : ''}`}>
+              <div className="reference-back__top">◆ &nbsp; STRONGER TOGETHER, BETTER TOMORROW &nbsp; ◆</div>
+              <h3>— MEMBER BENEFITS —</h3>
+              <div className="reference-back__benefits"><span>🤝<b>COMMUNITY<br/>NETWORKING</b></span><span>♥<b>SOCIAL<br/>SUPPORT</b></span><span>◆<b>EDUCATIONAL<br/>RESOURCES</b></span><span>◇<b>ADVOCACY &<br/>WELFARE</b></span></div>
+              <div className="reference-back__contact"><div>🌐 jawkhela-youth.vercel.app<br/>✉ Zwanan Jawkhela Community<br/>📍 Jawkhela, Pakistan</div><div><b>Helpline Numbers:</b><br/>+92 300 123 4567<br/>+92 301 123 4567</div><div className="reference-back__qr">SCAN TO VERIFY</div></div>
+              <div className="reference-back__footer">◆ &nbsp; UNITY • RESPECT • CULTURE • SERVICE &nbsp; ◆</div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3"><button onClick={() => setCardSide(cardSide === 'front' ? 'back' : 'front')} className="w-full border border-[#075c41] text-[#075c41] font-bold py-3 rounded-lg hover:bg-green-50 transition-colors">View {cardSide === 'front' ? 'Back' : 'Front'} Side</button><button onClick={downloadCard} className="w-full bg-[#075c41] text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors flex items-center justify-center gap-2"><Download size={18} /> Download 2-Sided PDF</button></div>
           </div>
 
           {/* Status Check */}
