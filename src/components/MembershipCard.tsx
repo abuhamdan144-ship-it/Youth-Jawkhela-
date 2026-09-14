@@ -261,6 +261,23 @@ export function MembershipCard({
  * It renders the card in an offscreen container, captures it, and saves the PDF.
  */
 export const generateMembershipCardPDF = async (member: MembershipCardData) => {
+  let pdfMember = { ...member };
+  if (member.profileImageUrl) {
+    try {
+      const response = await fetch(member.profileImageUrl, { mode: 'cors' });
+      if (!response.ok) throw new Error(`Image request failed: ${response.status}`);
+      const blob = await response.blob();
+      pdfMember.profileImageUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Member photo could not be embedded in PDF; using initials instead.', error);
+      pdfMember.profileImageUrl = undefined;
+    }
+  }
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-9999px';
@@ -274,12 +291,12 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
   await new Promise<void>((resolve) => {
     root.render(
       <div id="pdf-card-container" style={{ display: 'flex', flexDirection: 'column', gap: '40px', padding: '20px' }}>
-        <MembershipCard member={member} isPdfMode={true} side="front" />
-        <MembershipCard member={member} isPdfMode={true} side="back" />
+        <MembershipCard member={pdfMember} isPdfMode={true} side="front" />
+        <MembershipCard member={pdfMember} isPdfMode={true} side="back" />
       </div>
     );
-    // Give fonts and images some time to load before snapshotting
-    setTimeout(resolve, 1500); 
+    // Give fonts and same-origin images time to load before snapshotting.
+    setTimeout(resolve, 1500);
   });
 
   try {
@@ -288,8 +305,9 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     
     if (!frontEl || !backEl) throw new Error("Card elements not found");
 
-    const canvasFront = await html2canvas(frontEl, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
-    const canvasBack = await html2canvas(backEl, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
+    const canvasOptions = { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false } as const;
+    const canvasFront = await html2canvas(frontEl, canvasOptions);
+    const canvasBack = await html2canvas(backEl, canvasOptions);
 
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 380] });
     pdf.addImage(canvasFront.toDataURL('image/png'), 'PNG', 0, 0, 600, 380);
