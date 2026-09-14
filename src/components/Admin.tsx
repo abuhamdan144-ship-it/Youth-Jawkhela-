@@ -183,8 +183,35 @@ export function Admin() {
     const csv = [keys.join(','), ...rows.map(row => keys.map(key => `"${clean(row[key])}"`).join(','))].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url);
   };
-  const downloadExcel = (filename: string, rows: any[]) => { if (!rows.length) { alert('No records available to download.'); return; } const sheet = XLSX.utils.json_to_sheet(rows); const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, sheet, 'Records'); XLSX.writeFile(book, filename); };
-  const downloadPdf = (title: string, filename: string, rows: any[]) => { if (!rows.length) { alert('No records available to download.'); return; } const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' }); pdf.setFontSize(16); pdf.text(title, 40, 42); pdf.setFontSize(8); let y = 64; rows.forEach((row, index) => { const line = `${index + 1}. ${Object.entries(row).map(([key, value]) => `${key}: ${String(value ?? '').slice(0, 80)}`).join(' | ')}`; const wrapped = pdf.splitTextToSize(line, 750); if (y + wrapped.length * 12 > 550) { pdf.addPage(); y = 42; } pdf.text(wrapped, 40, y); y += wrapped.length * 12 + 5; }); pdf.save(filename); };
+  const normalizeReportRows = (rows: any[]) => rows.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => {
+    if (value && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function') return [key, (value as any).toDate().toISOString()];
+    if (value && typeof value === 'object') return [key, JSON.stringify(value)];
+    return [key, value ?? ''];
+  })));
+  const downloadExcel = (filename: string, rows: any[]) => {
+    if (!rows.length) { alert('No records available to download.'); return; }
+    try {
+      const cleanRows = normalizeReportRows(rows);
+      const sheet = XLSX.utils.json_to_sheet(cleanRows, { skipHeader: false });
+      sheet['!cols'] = Object.keys(cleanRows[0]).map(() => ({ wch: 22 }));
+      const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, sheet, 'Records');
+      XLSX.writeFile(book, filename, { bookType: 'xlsx', compression: true });
+    } catch (error) { console.error('Excel export failed', error); alert('Excel report could not be downloaded. Please try again.'); }
+  };
+  const downloadPdf = (title: string, filename: string, rows: any[]) => {
+    if (!rows.length) { alert('No records available to download.'); return; }
+    try {
+      const cleanRows = normalizeReportRows(rows);
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const columns = Object.keys(cleanRows[0]);
+      const colWidth = 760 / Math.max(columns.length, 1);
+      let page = 1;
+      const drawHeader = () => { pdf.setFillColor(7, 92, 65); pdf.rect(28, 28, 786, 34, 'F'); pdf.setTextColor(255, 255, 255); pdf.setFontSize(15); pdf.text(title, 40, 50); pdf.setFontSize(7); pdf.text(`Page ${page}`, 770, 50); pdf.setTextColor(30, 45, 38); pdf.setFillColor(226, 241, 232); pdf.rect(28, 72, 786, 24, 'F'); columns.forEach((column, index) => pdf.text(column.slice(0, 18), 36 + index * colWidth, 88)); };
+      drawHeader(); let y = 112; pdf.setFontSize(7);
+      cleanRows.forEach((row, rowIndex) => { if (y > 560) { pdf.addPage(); page += 1; drawHeader(); y = 112; } if (rowIndex % 2 === 0) { pdf.setFillColor(248, 251, 249); pdf.rect(28, y - 10, 786, 20, 'F'); } columns.forEach((column, index) => pdf.text(String(row[column] ?? '').slice(0, 28), 36 + index * colWidth, y)); y += 20; });
+      pdf.save(filename);
+    } catch (error) { console.error('PDF export failed', error); alert('PDF report could not be downloaded. Please try again.'); }
+  };
   const exportButtons = (label: string, base: string, rows: any[]) => <div className="rounded-lg border border-gray-200 p-3"><p className="text-sm font-bold text-gray-800 mb-2">{label}</p><div className="flex flex-wrap gap-2"><button onClick={() => downloadCsv(`${base}.csv`, rows)} className="rounded bg-slate-700 px-3 py-2 text-xs font-bold text-white">CSV</button><button onClick={() => downloadExcel(`${base}.xlsx`, rows)} className="rounded bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Excel</button><button onClick={() => downloadPdf(label, `${base}.pdf`, rows)} className="rounded bg-rose-700 px-3 py-2 text-xs font-bold text-white">PDF</button></div></div>;
   const allMembers = [...activeMembers, ...pendingMembers];
   const bloodReport = Object.entries(allMembers.reduce((map: Record<string, number>, member) => { const group = member.bloodGroup || member.bloodType || 'Not provided'; map[group] = (map[group] || 0) + 1; return map; }, {})).map(([bloodGroup, total]) => ({ bloodGroup, total }));
