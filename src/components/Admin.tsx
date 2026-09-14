@@ -102,10 +102,10 @@ const AdminItemActions = ({
     <div className="flex flex-col gap-2">
       {isRequestCollection && <div className={`text-xs font-bold px-2 py-1 rounded w-max ${currentStatus === 'Approved' ? 'bg-green-100 text-green-800' : currentStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>Status: {currentStatus}</div>}
       <div className="flex flex-wrap gap-2 items-center">
-        <button onClick={handleSave} className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Save</button>
-        {(isRequestCollection && currentStatus !== 'Approved') && <button onClick={handleApprove} className="flex items-center gap-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Approve</button>}
-        {(isRequestCollection && currentStatus !== 'Rejected') && <button onClick={handleReject} className="flex items-center gap-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Reject</button>}
-        <button onClick={handleDelete} className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-bold transition-colors">Delete</button>
+        <button onClick={handleSave} className="admin-glow-button admin-glow-button--blue">Save</button>
+        {(isRequestCollection && currentStatus !== 'Approved') && <button onClick={handleApprove} className="admin-glow-button admin-glow-button--green">Approve</button>}
+        {(isRequestCollection && currentStatus !== 'Rejected') && <button onClick={handleReject} className="admin-glow-button admin-glow-button--gold">Reject</button>}
+        <button onClick={handleDelete} className="admin-glow-button admin-glow-button--red">Delete</button>
         {extraButtons}
       </div>
     </div>
@@ -692,7 +692,7 @@ export function Admin() {
           </div>
           <nav aria-label="Admin categories" className="flex gap-2 overflow-x-auto px-4 sm:px-8 pb-4">
             {adminTabs.map(({ key, label, action, icon: Icon }) => (
-              <button key={key} onClick={() => selectTab(key)} className={`group flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${activeTab === key ? 'border-secondary bg-secondary text-gray-900 shadow-md' : 'border-white/15 bg-white/10 text-white hover:bg-white/20'}`}>
+              <button key={key} onClick={() => selectTab(key)} className={`admin-category-button group flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${activeTab === key ? 'is-active' : ''}`}>
                 <Icon size={17} />
                 <span><strong className="block text-sm leading-tight">{label}{key === 'members' && pendingMembers.length > 0 ? ` (${pendingMembers.length})` : ''}</strong><small className={`block text-[10px] ${activeTab === key ? 'text-gray-700' : 'text-gray-300'}`}>{action}</small></span>
               </button>
