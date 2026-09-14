@@ -186,11 +186,12 @@ export function MembershipPage() {
           {/* Live membership card preview */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-gray-900">Membership Card Preview</h2><span className="text-xs font-bold text-green-700">LIVE</span></div>
-            <div id="membership-card-preview" className="membership-card-simple">
-              <div className="membership-card-simple__top"><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div><span dir="rtl">زوانان جوخیله تنظیم</span></div>
-              <div className="membership-card-simple__title">COMMUNITY MEMBER CARD</div>
-              <div className="membership-card-simple__content"><div className="membership-card-simple__photo">{cardMember.profileImageUrl ? <img src={cardMember.profileImageUrl} alt="Member" /> : <b>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</b>}</div><div className="membership-card-simple__fields"><div><small>FULL NAME</small><strong>{cardMember.fullName || 'Your name'}</strong></div><div><small>FATHER'S NAME</small><strong>{cardMember.fatherName || 'Not provided'}</strong></div><div><small>CNIC / ID</small><strong>{cardMember.cnic || 'Not provided'}</strong></div><div className="membership-card-simple__split"><div><small>BLOOD GROUP</small><strong>{cardMember.bloodGroup || 'A+'}</strong></div><div><small>VILLAGE</small><strong>{cardMember.village || 'Not provided'}</strong></div></div></div></div>
-              <div className="membership-card-simple__footer"><span>PRIVATE COMMUNITY MEMBER ID</span><b>{cardMember.cardNumber || 'PENDING APPROVAL'}</b></div>
+            <div id="membership-card-preview" className="membership-card-reference">
+              <div className="reference-card__green-cut" />
+              <div className="reference-card__gold-cut" />
+              <div className="reference-card__head"><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
+              <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">ZJ-{cardMember.cnic || 'MEMBER-0001'}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
+              <div className="reference-card__approval"><strong>{cardMember.status === 'Approved' ? 'APPROVED MEMBER' : 'MEMBERSHIP APPLICANT'}</strong><span>COMMUNITY SERVICE MEMBER</span></div>
             </div>
             <button onClick={downloadCard} className="mt-4 w-full bg-[#075c41] text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors flex items-center justify-center gap-2"><Download size={18} /> Download Membership Card</button>
           </div>
