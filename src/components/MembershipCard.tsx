@@ -305,9 +305,21 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     
     if (!frontEl || !backEl) throw new Error("Card elements not found");
 
-    const canvasOptions = { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false } as const;
-    const canvasFront = await html2canvas(frontEl, canvasOptions);
-    const canvasBack = await html2canvas(backEl, canvasOptions);
+    const canvasOptions = { scale: 2, useCORS: true, allowTaint: false, imageTimeout: 5000, backgroundColor: '#ffffff', logging: false } as const;
+    const capture = async (element: HTMLElement) => {
+      try {
+        return await html2canvas(element, canvasOptions);
+      } catch (firstError) {
+        console.warn('Card image capture failed; retrying without image elements.', firstError);
+        return html2canvas(element, {
+          ...canvasOptions,
+          useCORS: false,
+          ignoreElements: (node) => node.tagName === 'IMG' || node.tagName === 'SVG'
+        });
+      }
+    };
+    const canvasFront = await capture(frontEl);
+    const canvasBack = await capture(backEl);
 
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 380] });
     pdf.addImage(canvasFront.toDataURL('image/png'), 'PNG', 0, 0, 600, 380);
@@ -318,7 +330,7 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     pdf.save(`ZJ_Membership_Card_${safeName}.pdf`);
   } catch (e) {
     console.error(e);
-    alert('Failed to generate PDF. Make sure all images have loaded.');
+    alert('PDF could not be generated. Please try again; the member data was not changed.');
   } finally {
     root.unmount();
     if (document.body.contains(container)) {
