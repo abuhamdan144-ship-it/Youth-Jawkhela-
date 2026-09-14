@@ -82,6 +82,8 @@ export function MembershipPage() {
   const downloadCard = async () => {
     const element = document.getElementById('membership-card-preview');
     if (!element) return;
+    if (document.fonts?.ready) await document.fonts.ready;
+    await new Promise((resolve) => window.requestAnimationFrame(() => resolve(undefined)));
     const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
     // Keep the exact captured ratio. The previous fixed 900x520 canvas stretched
     // the mobile card and made text look broken in downloaded PDFs.
