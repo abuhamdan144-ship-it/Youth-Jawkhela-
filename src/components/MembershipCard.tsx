@@ -56,7 +56,7 @@ export function MembershipCard({
       <div className="absolute top-0 left-0 w-full h-[95px] bg-emerald-900 flex items-center px-6 shadow-md">
         {/* Geometric shape for depth */}
         <div className="absolute top-0 right-0 w-[45%] h-full bg-emerald-950" style={{ clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)' }}></div>
-        <img src="/zj-logo-light.png" alt="Logo" className="w-16 h-16 object-contain relative z-10 drop-shadow-lg" />
+        <img src="/zwanan-jawkhela-seal.jpeg" alt="Zwanan Jawkhela seal" className="w-16 h-16 object-contain relative z-10 drop-shadow-lg rounded-full" crossOrigin="anonymous" />
         <div className="ml-5 relative z-10 flex flex-col justify-center text-white pt-1">
           <h2 className="text-[22px] font-bold mb-1" style={{ fontFamily: 'system-ui, sans-serif' }} dir="rtl">زوانان جوخیله تنظیم</h2>
           <h1 className="text-[12px] font-black uppercase opacity-95">Zwanan Jawkhela Youth Welfare</h1>
