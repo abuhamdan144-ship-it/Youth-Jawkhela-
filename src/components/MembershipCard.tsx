@@ -37,7 +37,7 @@ export function MembershipCard({
   // Normalize data
   const name = member.fullName || member.name || 'COMMUNITY MEMBER';
   const fatherName = member.fatherName || '—';
-  const cardNo = member.cardNumber || member.membershipNumber || 'ZJ-2026-000';
+  const cardNo = member.cardNumber || member.membershipNumber || `ZJ-${new Date().getFullYear()}-0001`;
   const blood = member.bloodGroup || member.bloodType || '—';
   const village = member.village || member.address || '—';
   const phone = member.phone || '—';
@@ -332,7 +332,7 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     console.error(e);
     try {
       const name = member.fullName || member.name || 'COMMUNITY MEMBER';
-      const cardNo = member.cardNumber || member.membershipNumber || 'ZJ-2026-000';
+      const cardNo = member.cardNumber || member.membershipNumber || `ZJ-${new Date().getFullYear()}-0001`;
       const blood = member.bloodGroup || member.bloodType || '—';
       const village = member.village || member.address || '—';
       const directPdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [600, 380] });

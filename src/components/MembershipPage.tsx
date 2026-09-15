@@ -79,7 +79,7 @@ export function MembershipPage() {
     }
   };
 
-  const cardMember = memberData || { ...form, profileImageUrl: profileImage, cardNumber: 'PENDING' };
+  const cardMember = memberData || { ...form, profileImageUrl: profileImage, cardNumber: `ZJ-${new Date().getFullYear()}-0001` };
   const downloadCard = async () => {
     const frontElement = document.getElementById('membership-card-preview-front');
     const backElement = document.getElementById('membership-card-preview-back');
@@ -212,7 +212,7 @@ export function MembershipPage() {
               <div className="reference-card__green-cut" />
               <div className="reference-card__gold-cut" />
               <div className="reference-card__head"><div className="reference-card__identity"><img crossOrigin="anonymous" src="/zwanan-jawkhela-seal.jpeg" alt="Zwanan Jawkhela seal" /><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
-              <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img crossOrigin="anonymous" src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">ZJ-{cardMember.cnic || 'MEMBER-0001'}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
+              <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img crossOrigin="anonymous" src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">{cardMember.cardNumber || `ZJ-${new Date().getFullYear()}-0001`}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
               <div className="reference-card__approval"><strong>{cardMember.status === 'Approved' ? 'APPROVED MEMBER' : 'MEMBERSHIP APPLICANT'}</strong><span>COMMUNITY SERVICE MEMBER</span></div>
             </div>
             <div id="membership-card-preview-back" className={`membership-card-reference membership-card-reference--back ${cardSide === 'front' ? 'membership-card-side-hidden' : ''}`}>

@@ -344,9 +344,17 @@ export function Admin() {
   const approveMember = async (id: string) => {
     try {
       const memberRef = doc(db, 'memberships', id);
+      const currentYear = new Date().getFullYear();
+      const membershipSnapshot = await getDocs(collection(db, 'memberships'));
+      const usedNumbers = membershipSnapshot.docs
+        .map((item) => String(item.data().cardNumber || ''))
+        .map((value) => value.match(new RegExp(`^ZJ-${currentYear}-(\\d{4})$`)))
+        .filter(Boolean)
+        .map((match) => Number(match![1]));
+      const nextNumber = (usedNumbers.length ? Math.max(...usedNumbers) : 0) + 1;
       await updateDoc(memberRef, {
         status: 'Approved',
-        cardNumber: `ZJ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        cardNumber: `ZJ-${currentYear}-${String(nextNumber).padStart(4, '0')}`,
         issueDate: serverTimestamp()
       });
       fetchMembers();
