@@ -305,18 +305,24 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
     
     if (!frontEl || !backEl) throw new Error("Card elements not found");
 
-    const canvasOptions = { scale: 2, useCORS: true, allowTaint: false, imageTimeout: 5000, backgroundColor: '#ffffff', logging: false } as const;
-    const capture = async (element: HTMLElement) => {
-      try {
-        return await html2canvas(element, canvasOptions);
-      } catch (firstError) {
-        console.warn('Card image capture failed; retrying without image elements.', firstError);
-        return html2canvas(element, {
-          ...canvasOptions,
-          useCORS: false,
-          ignoreElements: (node) => node.tagName === 'IMG' || node.tagName === 'SVG'
+    const canvasOptions = { scale: 2, useCORS: true, allowTaint: false, imageTimeout: 10000, backgroundColor: '#ffffff', logging: false } as const;
+    const waitForImages = async (element: HTMLElement) => {
+      await Promise.all(Array.from(element.querySelectorAll('img')).map(async (image) => {
+        if (image.complete && image.naturalWidth > 0) {
+          try { await image.decode(); } catch { /* browser already decoded it */ }
+          return;
+        }
+        await new Promise<void>((resolve) => {
+          const finish = () => { image.removeEventListener('load', finish); image.removeEventListener('error', finish); resolve(); };
+          image.addEventListener('load', finish, { once: true });
+          image.addEventListener('error', finish, { once: true });
+          window.setTimeout(finish, 10000);
         });
-      }
+      }));
+    };
+    const capture = async (element: HTMLElement) => {
+      await waitForImages(element);
+      return html2canvas(element, canvasOptions);
     };
     const canvasFront = await capture(frontEl);
     const canvasBack = await capture(backEl);
@@ -349,6 +355,12 @@ export const generateMembershipCardPDF = async (member: MembershipCardData) => {
           directPdf.setTextColor(6, 62, 43); directPdf.setFontSize(13); directPdf.text('Website: jawkhela-youth.vercel.app', 55, 285); directPdf.text('Helpline: +92 300 123 4567', 55, 310);
           directPdf.setFillColor(6, 62, 43); directPdf.rect(0, 340, 600, 40, 'F'); directPdf.setTextColor(215, 182, 76); directPdf.setFontSize(14); directPdf.text('UNITY  •  RESPECT  •  CULTURE  •  SERVICE', 145, 365);
         } else {
+          if (pdfMember.profileImageUrl?.startsWith('data:image/')) {
+            try {
+              const imageFormat = pdfMember.profileImageUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+              directPdf.addImage(pdfMember.profileImageUrl, imageFormat, 45, 112, 115, 145);
+            } catch (imageError) { console.warn('Direct PDF photo insertion failed', imageError); }
+          }
           directPdf.setTextColor(7, 92, 65); directPdf.setFontSize(26); directPdf.text('COMMUNITY MEMBER CARD', 190, 125);
           directPdf.setFontSize(18); directPdf.text(name, 190, 175); directPdf.setTextColor(164, 121, 19); directPdf.setFontSize(15); directPdf.text(cardNo, 190, 200);
           directPdf.setTextColor(65, 84, 74); directPdf.setFontSize(12); directPdf.text(`Father's Name: ${member.fatherName || 'Not provided'}`, 190, 235); directPdf.text(`CNIC / ID: ${member.cnic || 'Not provided'}`, 190, 260); directPdf.text(`Blood Group: ${blood}`, 190, 285); directPdf.text(`Village: ${village}`, 390, 285);
