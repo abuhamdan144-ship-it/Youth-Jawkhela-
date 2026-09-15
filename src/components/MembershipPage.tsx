@@ -85,6 +85,23 @@ export function MembershipPage() {
     const backElement = document.getElementById('membership-card-preview-back');
     if (!frontElement || !backElement) return;
     if (document.fonts?.ready) await document.fonts.ready;
+    const waitForImages = async (element: HTMLElement) => {
+      const images = Array.from(element.querySelectorAll('img'));
+      await Promise.all(images.map(async (image) => {
+        image.crossOrigin = 'anonymous';
+        if (image.complete && image.naturalWidth > 0) {
+          try { await image.decode(); } catch { /* already decoded by the browser */ }
+          return;
+        }
+        await new Promise<void>((resolve) => {
+          const finish = () => { image.removeEventListener('load', finish); image.removeEventListener('error', finish); resolve(); };
+          image.addEventListener('load', finish, { once: true });
+          image.addEventListener('error', finish, { once: true });
+          window.setTimeout(finish, 5000);
+        });
+      }));
+    };
+    await Promise.all([waitForImages(frontElement), waitForImages(backElement)]);
     await new Promise((resolve) => window.requestAnimationFrame(() => resolve(undefined)));
     const [frontCanvas, backCanvas] = await Promise.all([
       html2canvas(frontElement, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }),
@@ -194,8 +211,8 @@ export function MembershipPage() {
             <div id="membership-card-preview-front" className={`membership-card-reference ${cardSide === 'back' ? 'membership-card-side-hidden' : ''}`}>
               <div className="reference-card__green-cut" />
               <div className="reference-card__gold-cut" />
-              <div className="reference-card__head"><div className="reference-card__identity"><img src="/zwanan-jawkhela-seal.jpeg" alt="Zwanan Jawkhela seal" /><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
-              <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">ZJ-{cardMember.cnic || 'MEMBER-0001'}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
+              <div className="reference-card__head"><div className="reference-card__identity"><img crossOrigin="anonymous" src="/zwanan-jawkhela-seal.jpeg" alt="Zwanan Jawkhela seal" /><div><strong>Zwanan Jawkhela</strong><small>Youth Welfare Community</small></div></div><b dir="rtl">زوانان جوخیله تنظیم</b></div>
+              <div className="reference-card__main"><div className="reference-card__photo">{cardMember.profileImageUrl ? <img crossOrigin="anonymous" src={cardMember.profileImageUrl} alt="Member" /> : <span>{(cardMember.fullName || 'YN').split(/\s+/).map((x: string) => x[0]).slice(0,2).join('').toUpperCase()}</span>}</div><div className="reference-card__details"><div className="reference-card__brand">JAWKHELA <em>COMMUNITY</em></div><div className="reference-card__name">{cardMember.fullName || 'YOUR NAME'}</div><div className="reference-card__number">ZJ-{cardMember.cnic || 'MEMBER-0001'}</div><div className="reference-card__role">Community Member</div><div className="reference-card__meta"><span><small>FATHER'S NAME</small>{cardMember.fatherName || 'Not provided'}</span><span><small>VILLAGE</small>{cardMember.village || 'Jawkhela'}</span></div></div></div>
               <div className="reference-card__approval"><strong>{cardMember.status === 'Approved' ? 'APPROVED MEMBER' : 'MEMBERSHIP APPLICANT'}</strong><span>COMMUNITY SERVICE MEMBER</span></div>
             </div>
             <div id="membership-card-preview-back" className={`membership-card-reference membership-card-reference--back ${cardSide === 'front' ? 'membership-card-side-hidden' : ''}`}>
