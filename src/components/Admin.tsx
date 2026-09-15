@@ -748,7 +748,7 @@ export function Admin() {
             <div><h2 className="text-xl font-bold text-secondary">Admin Dashboard</h2><p className="text-xs text-gray-300 mt-1">{user.email}</p></div>
             <button onClick={handleLogout} className="flex items-center gap-2 rounded-lg border border-gray-500 px-3 py-2 text-sm font-bold text-gray-100 hover:bg-gray-800 transition-colors"><LogOut size={16} /> Sign Out</button>
           </div>
-          <nav aria-label="Admin categories" className="hidden">
+          <nav aria-label="Admin categories" className="admin-top-nav">
             {adminTabs.map(({ key, label, action, icon: Icon }) => (
               <button key={key} onClick={() => selectTab(key)} className={`admin-category-button group flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${activeTab === key ? 'is-active' : ''}`}>
                 <Icon size={17} />
@@ -1491,9 +1491,6 @@ export function Admin() {
             </div>
           )}
         </main>
-        <nav aria-label="Admin categories bottom navigation" className="admin-bottom-nav">
-          <div className="admin-bottom-nav__scroll">{adminTabs.map(({ key, label, action, icon: Icon }) => <button key={key} onClick={() => selectTab(key)} className={`admin-bottom-tab ${activeTab === key ? 'is-active' : ''}`}><Icon size={18} /><span>{label}</span><small>{action}</small></button>)}</div>
-        </nav>
       </div>
     </div>
   );
