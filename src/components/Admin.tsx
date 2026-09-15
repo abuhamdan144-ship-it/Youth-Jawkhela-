@@ -135,6 +135,7 @@ export function Admin() {
   const [bloodRequests, setBloodRequests] = useState<any[]>([]);
   const [overseas, setOverseas] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [dailyTasks, setDailyTasks] = useState<any[]>([]);
   
   // Form states
   const [newCabinetForm, setNewCabinetForm] = useState({ name: '', position: 'President', startDate: '', endDate: '', responsibilities: '' });
@@ -151,6 +152,7 @@ export function Admin() {
   const [newDonationForm, setNewDonationForm] = useState({ donorName: '', amount: '', date: '', purpose: '' });
   const [newBloodForm, setNewBloodForm] = useState({ patientName: '', bloodGroup: 'A+', hospital: '', contactNumber: '', urgency: 'High' });
   const [newOverseasForm, setNewOverseasForm] = useState({ fullName: '', currentCountry: '', currentCity: '', phone: '', homeVillage: '' });
+  const [newTaskForm, setNewTaskForm] = useState({ title: '', date: new Date().toISOString().slice(0, 10), priority: 'Normal', details: '', status: 'Pending' });
   const [donations, setDonations] = useState<any[]>([]);
 
 
@@ -170,6 +172,7 @@ export function Admin() {
         fetchAdsAndBlood();
         fetchDonations();
         fetchCandidates();
+        fetchDailyTasks();
       }
     });
 
@@ -414,6 +417,33 @@ export function Admin() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const fetchDailyTasks = async () => {
+    try {
+      const snap = await getDocs(query(collection(db, 'dailyTasks'), orderBy('date', 'asc')));
+      setDailyTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (error) { console.error('Error fetching daily tasks:', error); }
+  };
+
+  const handleAddDailyTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'dailyTasks'), withoutUndefined({ ...newTaskForm, createdBy: user?.email || '', createdAt: serverTimestamp() }));
+      setNewTaskForm({ title: '', date: new Date().toISOString().slice(0, 10), priority: 'Normal', details: '', status: 'Pending' });
+      fetchDailyTasks();
+      alert('Daily task added successfully.');
+    } catch (error: any) { alert(error.message || 'Failed to add daily task.'); }
+  };
+
+  const toggleDailyTask = async (task: any) => {
+    try { await updateDoc(doc(db, 'dailyTasks', task.id), { status: task.status === 'Done' ? 'Pending' : 'Done', updatedAt: serverTimestamp() }); fetchDailyTasks(); }
+    catch (error: any) { alert(error.message || 'Failed to update task.'); }
+  };
+
+  const deleteDailyTask = async (id: string) => {
+    if (!confirm('Delete this daily task?')) return;
+    try { await deleteDoc(doc(db, 'dailyTasks', id)); fetchDailyTasks(); } catch (error: any) { alert(error.message || 'Failed to delete task.'); }
   };
 
   const handleAddMember = async (e: React.FormEvent) => {
@@ -708,6 +738,7 @@ export function Admin() {
     { key: 'news', label: 'Announcements', action: 'Publish update', icon: Newspaper },
     { key: 'voting', label: 'Voting', action: 'Add candidate', icon: Vote },
     { key: 'ads', label: 'Ads', action: 'Publish ad', icon: CheckCircle },
+    { key: 'tasks', label: 'Daily Tasks', action: 'Add task', icon: CheckCircle },
   ];
   return (
     <div className="admin-dashboard flex min-h-screen min-w-0 bg-gray-100">
@@ -717,7 +748,7 @@ export function Admin() {
             <div><h2 className="text-xl font-bold text-secondary">Admin Dashboard</h2><p className="text-xs text-gray-300 mt-1">{user.email}</p></div>
             <button onClick={handleLogout} className="flex items-center gap-2 rounded-lg border border-gray-500 px-3 py-2 text-sm font-bold text-gray-100 hover:bg-gray-800 transition-colors"><LogOut size={16} /> Sign Out</button>
           </div>
-          <nav aria-label="Admin categories" className="flex gap-2 overflow-x-auto px-4 sm:px-8 pb-4">
+          <nav aria-label="Admin categories" className="hidden">
             {adminTabs.map(({ key, label, action, icon: Icon }) => (
               <button key={key} onClick={() => selectTab(key)} className={`admin-category-button group flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all ${activeTab === key ? 'is-active' : ''}`}>
                 <Icon size={17} />
@@ -1378,6 +1409,25 @@ export function Admin() {
               </div>
             </div>
           )}
+          {activeTab === 'tasks' && (
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)] gap-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Admin workflow</span>
+                <h3 className="text-2xl font-bold text-gray-900 mt-1 mb-5">Add Daily Task</h3>
+                <form onSubmit={handleAddDailyTask} className="space-y-4">
+                  <div><label className="block text-sm font-bold text-gray-700 mb-1">Task title</label><input required value={newTaskForm.title} onChange={e => setNewTaskForm({...newTaskForm, title: e.target.value})} placeholder="Example: Verify new members" className="w-full border border-gray-300 rounded-lg px-4 py-2" /></div>
+                  <div className="grid grid-cols-2 gap-3"><div><label className="block text-sm font-bold text-gray-700 mb-1">Date</label><input required type="date" value={newTaskForm.date} onChange={e => setNewTaskForm({...newTaskForm, date: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" /></div><div><label className="block text-sm font-bold text-gray-700 mb-1">Priority</label><select value={newTaskForm.priority} onChange={e => setNewTaskForm({...newTaskForm, priority: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2"><option>Low</option><option>Normal</option><option>High</option><option>Urgent</option></select></div></div>
+                  <div><label className="block text-sm font-bold text-gray-700 mb-1">Task details</label><textarea required rows={5} value={newTaskForm.details} onChange={e => setNewTaskForm({...newTaskForm, details: e.target.value})} placeholder="Add complete instructions or notes" className="w-full border border-gray-300 rounded-lg px-4 py-2" /></div>
+                  <button type="submit" className="w-full bg-primary hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold shadow-md">Save Daily Task</button>
+                </form>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between gap-3 mb-5"><div><span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Today and upcoming</span><h3 className="text-2xl font-bold text-gray-900 mt-1">Daily Task Details</h3></div><button onClick={fetchDailyTasks} className="text-sm font-bold text-emerald-700 hover:underline">Refresh</button></div>
+                {dailyTasks.length === 0 ? <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">No daily tasks added yet.</div> : <div className="space-y-3">{dailyTasks.map(task => <article key={task.id} className={`rounded-xl border p-4 ${task.status === 'Done' ? 'border-emerald-200 bg-emerald-50/60' : 'border-gray-200 bg-white'}`}><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><h4 className={`font-bold text-lg ${task.status === 'Done' ? 'line-through text-gray-500' : 'text-gray-900'}`}>{task.title}</h4><span className="rounded-full px-2 py-1 text-[10px] font-bold uppercase bg-amber-100 text-amber-800">{task.priority}</span></div><p className="text-sm font-semibold text-emerald-700 mt-1">Due: {task.date}</p></div><div className="flex gap-2"><button onClick={() => toggleDailyTask(task)} className="admin-glow-button admin-glow-button--green">{task.status === 'Done' ? 'Mark Pending' : 'Mark Done'}</button><button onClick={() => deleteDailyTask(task.id)} className="admin-glow-button admin-glow-button--red">Delete</button></div></div><p className="mt-3 whitespace-pre-wrap text-sm text-gray-700">{task.details}</p></article>)}</div>}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'ads' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -1441,6 +1491,9 @@ export function Admin() {
             </div>
           )}
         </main>
+        <nav aria-label="Admin categories bottom navigation" className="admin-bottom-nav">
+          <div className="admin-bottom-nav__scroll">{adminTabs.map(({ key, label, action, icon: Icon }) => <button key={key} onClick={() => selectTab(key)} className={`admin-bottom-tab ${activeTab === key ? 'is-active' : ''}`}><Icon size={18} /><span>{label}</span><small>{action}</small></button>)}</div>
+        </nav>
       </div>
     </div>
   );
