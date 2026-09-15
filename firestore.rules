@@ -81,9 +81,13 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    match /votes/{document=**} {
-      allow create: if true;
-      allow read, write: if isAdmin();
+    match /votes/{voteId} {
+      // The client uses one deterministic document per member and position.
+      // A second candidate vote for that position therefore cannot overwrite the first.
+      allow create: if !exists(/databases/$(database)/documents/votes/$(voteId))
+        && request.resource.data.memberCnic != null
+        && request.resource.data.position != null;
+      allow read, update, delete: if isAdmin();
     }
     
     // Default deny for anything else

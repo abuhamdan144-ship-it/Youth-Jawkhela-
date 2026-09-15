@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import { collection, getDocs, limit, orderBy, query, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query, addDoc, serverTimestamp, where, doc, setDoc } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { Admin } from './components/Admin';
 import { Activity, ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Droplets, Globe2, HeartHandshake, Images, Landmark, Menu, Megaphone, ShieldCheck, Sparkles, Users, Vote, X } from 'lucide-react';
@@ -111,13 +111,20 @@ function CandidateCard({ item, onVoted }: { item: RecordItem; onVoted?: () => vo
     if (voted || saving || !item.id) return;
     setSaving(true);
     try {
-      await addDoc(collection(db, 'votes'), { candidateId: item.id, candidateName: item.fullName || '', position: item.position || '', createdAt: serverTimestamp() });
-      window.localStorage.setItem(voteKey, item.id);
+      const rawCnic = window.prompt('Enter your membership CNIC to vote:');
+      const memberCnic = rawCnic?.trim();
+      if (!memberCnic) return;
+      const membership = await getDocs(query(collection(db, 'memberships'), where('cnic', '==', memberCnic), limit(1)));
+      if (membership.empty || membership.docs[0].data().status !== 'Approved') { alert('Only an approved member can vote. Please check your CNIC and membership status.'); return; }
+      const position = String(item.position || 'position').trim().toLowerCase();
+      const voteId = `${position.replace(/[^a-z0-9]+/g, '-')}-${memberCnic.replace(/[^a-zA-Z0-9]+/g, '')}`;
+      await setDoc(doc(db, 'votes', voteId), { candidateId: item.id, candidateName: item.fullName || '', position, memberCnic, createdAt: serverTimestamp() });
+      window.localStorage.setItem(`${voteKey}-${memberCnic}`, item.id);
       setVoted(true);
       onVoted?.();
     } catch (error) {
       console.error(error);
-      alert('Vote submit nahi ho saka. Please try again.');
+      alert('Vote submit nahi ho saka. Is position par aap ka vote pehle record ho chuka ho sakta hai.');
     } finally { setSaving(false); }
   };
   return <article className={`candidate-card ${voted ? 'candidate-card-voted' : ''}`}>
