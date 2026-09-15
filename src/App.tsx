@@ -105,8 +105,16 @@ function AdsBillboard({ ads }: { ads: RecordItem[] }) {
 function EmptyState({ message, compact = false }: { message: string; compact?: boolean }) { return <div className={compact ? 'empty compact' : 'empty'}><Activity size={24} /><p>{message}</p></div>; }
 function CandidateCard({ item, onVoted }: { item: RecordItem; onVoted?: () => void }) {
   const voteKey = `zj-voted-${item.position || 'position'}`;
-  const [voted, setVoted] = useState(() => window.localStorage.getItem(voteKey) === item.id);
+  const position = String(item.position || 'position').trim().toLowerCase();
+  const [voted, setVoted] = useState(() => Boolean(window.localStorage.getItem(voteKey)));
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    const handlePositionVote = (event: Event) => {
+      if ((event as CustomEvent<{ position?: string }>).detail?.position === position) setVoted(true);
+    };
+    window.addEventListener('zj-position-voted', handlePositionVote);
+    return () => window.removeEventListener('zj-position-voted', handlePositionVote);
+  }, [position]);
   const vote = async () => {
     if (voted || saving || !item.id) return;
     setSaving(true);
@@ -116,10 +124,12 @@ function CandidateCard({ item, onVoted }: { item: RecordItem; onVoted?: () => vo
       if (!memberCnic) return;
       const membership = await getDocs(query(collection(db, 'memberships'), where('cnic', '==', memberCnic), limit(1)));
       if (membership.empty || membership.docs[0].data().status !== 'Approved') { alert('Only an approved member can vote. Please check your CNIC and membership status.'); return; }
-      const position = String(item.position || 'position').trim().toLowerCase();
       const voteId = `${position.replace(/[^a-z0-9]+/g, '-')}-${memberCnic.replace(/[^a-zA-Z0-9]+/g, '')}`;
       await setDoc(doc(db, 'votes', voteId), { candidateId: item.id, candidateName: item.fullName || '', position, memberCnic, createdAt: serverTimestamp() });
+      // Store the position-level key so every A/B/C candidate button is locked.
+      window.localStorage.setItem(voteKey, item.id);
       window.localStorage.setItem(`${voteKey}-${memberCnic}`, item.id);
+      window.dispatchEvent(new CustomEvent('zj-position-voted', { detail: { position } }));
       setVoted(true);
       onVoted?.();
     } catch (error) {
